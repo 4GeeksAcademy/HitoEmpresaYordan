@@ -5,7 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aplicacion | Empresa</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "EmploymentAgency",
+        "name": "Nexova Solutions",
+        "url": "https://nexovasolutions.com/",
+        "description": "Formulario de aplicacion para candidatos de Nexova Solutions.",
+        "areaServed": ["ES", "US"],
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "recruitment",
+          "email": "contacto@nexovasolutions.com"
+        }
+      }
+    </script>
   </head>
   <body class="bg-slate-100 text-slate-900 min-h-screen">
     <main class="max-w-3xl mx-auto px-6 py-14">
@@ -17,7 +31,15 @@
           Completa tus datos. Los campos marcados con * son obligatorios.
         </p>
 
-        <form id="applicationForm" class="mt-8 space-y-6" novalidate>
+        <form id="applicationForm" class="mt-8 space-y-6" novalidate aria-describedby="applicationFormErrors formSuccess">
+          <p
+            id="applicationFormErrors"
+            class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+          ></p>
+
           <div>
             <label for="fullName" class="block text-sm font-semibold">Nombre completo *</label>
             <input
@@ -27,8 +49,11 @@
               class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Ej: Ana Lopez"
               required
+              aria-required="true"
+              aria-invalid="false"
+              aria-describedby="fullName-error"
             />
-            <p class="mt-1 text-sm text-red-600" data-error-for="fullName"></p>
+            <p id="fullName-error" class="mt-1 text-sm text-red-600" data-error-for="fullName" aria-live="polite"></p>
           </div>
 
           <div>
@@ -40,8 +65,11 @@
               class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Ej: nombre@correo.com"
               required
+              aria-required="true"
+              aria-invalid="false"
+              aria-describedby="email-error"
             />
-            <p class="mt-1 text-sm text-red-600" data-error-for="email"></p>
+            <p id="email-error" class="mt-1 text-sm text-red-600" data-error-for="email" aria-live="polite"></p>
           </div>
 
           <div>
@@ -53,8 +81,11 @@
               class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Ej: +34123456789"
               required
+              aria-required="true"
+              aria-invalid="false"
+              aria-describedby="phone-error"
             />
-            <p class="mt-1 text-sm text-red-600" data-error-for="phone"></p>
+            <p id="phone-error" class="mt-1 text-sm text-red-600" data-error-for="phone" aria-live="polite"></p>
           </div>
 
           <div>
@@ -64,6 +95,9 @@
               name="position"
               class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              aria-required="true"
+              aria-invalid="false"
+              aria-describedby="position-error"
             >
               <option value="">Selecciona una opcion</option>
               <option value="frontend">Frontend Developer</option>
@@ -71,7 +105,7 @@
               <option value="data">Data Analyst</option>
               <option value="product">Product Manager</option>
             </select>
-            <p class="mt-1 text-sm text-red-600" data-error-for="position"></p>
+            <p id="position-error" class="mt-1 text-sm text-red-600" data-error-for="position" aria-live="polite"></p>
           </div>
 
           <div>
@@ -82,18 +116,35 @@
               rows="4"
               class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Cuéntanos por que quieres unirte"
+              aria-invalid="false"
+              aria-describedby="message-error"
             ></textarea>
-            <p class="mt-1 text-sm text-red-600" data-error-for="message"></p>
+            <p id="message-error" class="mt-1 text-sm text-red-600" data-error-for="message" aria-live="polite"></p>
           </div>
 
-          <button
-            type="submit"
-            class="w-full rounded-lg bg-blue-600 px-5 py-3 text-white font-semibold hover:bg-blue-700 transition"
-          >
-            Enviar aplicacion
-          </button>
+          <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button
+              id="applicationReset"
+              type="reset"
+              class="w-full rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto"
+            >
+              Limpiar formulario
+            </button>
+            <button
+              type="submit"
+              class="w-full rounded-lg bg-blue-600 px-5 py-3 text-white font-semibold transition hover:bg-blue-700 sm:w-auto"
+            >
+              Enviar aplicacion
+            </button>
+          </div>
 
-          <p id="formSuccess" class="hidden rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-700 font-medium"></p>
+          <p
+            id="formSuccess"
+            class="hidden rounded-lg border border-green-200 bg-green-50 px-4 py-3 font-medium text-green-700"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          ></p>
         </form>
       </section>
     </main>

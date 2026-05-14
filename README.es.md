@@ -89,6 +89,21 @@ ai-engineering-company-project-monorepo/
 
 ---
 
+## Ejecutar este proyecto localmente (compatible con Codespaces)
+
+Desde la raíz del repositorio, levanta un servidor estático:
+
+```bash
+npx --yes serve . -l 3000
+```
+
+Luego abre:
+
+- `http://localhost:3000/index.html`
+- `http://localhost:3000/application.html`
+
+---
+
 ## Contribuidores
 
 Esta plantilla fue creada como parte del Programa de Carrera de Ingeniería de IA de 4Geeks Academy por [@marcogonzalo](https://www.linkedin.com/in/marcogonzalo) y [@alezanchezr](https://x.com/alesanchezr), junto a otros muchos colaboradores. Descubre más sobre nuestro [Curso de Ingeniería de IA](https://4geeksacademy.com/es/programas-de-carrera/ingenieria-ia) y sobre [otros cursos](https://4geeksacademy.com/es/comparar-programas).
