@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aplicacion | Empresa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="bg-slate-100 text-slate-900 min-h-screen">
+    <main class="max-w-3xl mx-auto px-6 py-14">
+      <a href="index.html" class="text-sm font-medium text-blue-700 hover:underline">Volver al inicio</a>
+
+      <section class="mt-4 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h1 class="text-3xl font-bold">Formulario de aplicacion</h1>
+        <p class="mt-2 text-slate-600">
+          Completa tus datos. Los campos marcados con * son obligatorios.
+        </p>
+
+        <form id="applicationForm" class="mt-8 space-y-6" novalidate>
+          <div>
+            <label for="fullName" class="block text-sm font-semibold">Nombre completo *</label>
+            <input
+              id="fullName"
+              name="fullName"
+              type="text"
+              class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ej: Ana Lopez"
+              required
+            />
+            <p class="mt-1 text-sm text-red-600" data-error-for="fullName"></p>
+          </div>
+
+          <div>
+            <label for="email" class="block text-sm font-semibold">Correo electronico *</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ej: nombre@correo.com"
+              required
+            />
+            <p class="mt-1 text-sm text-red-600" data-error-for="email"></p>
+          </div>
+
+          <div>
+            <label for="phone" class="block text-sm font-semibold">Telefono *</label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ej: +34123456789"
+              required
+            />
+            <p class="mt-1 text-sm text-red-600" data-error-for="phone"></p>
+          </div>
+
+          <div>
+            <label for="position" class="block text-sm font-semibold">Puesto de interes *</label>
+            <select
+              id="position"
+              name="position"
+              class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="">Selecciona una opcion</option>
+              <option value="frontend">Frontend Developer</option>
+              <option value="backend">Backend Developer</option>
+              <option value="data">Data Analyst</option>
+              <option value="product">Product Manager</option>
+            </select>
+            <p class="mt-1 text-sm text-red-600" data-error-for="position"></p>
+          </div>
+
+          <div>
+            <label for="message" class="block text-sm font-semibold">Mensaje (opcional)</label>
+            <textarea
+              id="message"
+              name="message"
+              rows="4"
+              class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Cuéntanos por que quieres unirte"
+            ></textarea>
+            <p class="mt-1 text-sm text-red-600" data-error-for="message"></p>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full rounded-lg bg-blue-600 px-5 py-3 text-white font-semibold hover:bg-blue-700 transition"
+          >
+            Enviar aplicacion
+          </button>
+
+          <p id="formSuccess" class="hidden rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-700 font-medium"></p>
+        </form>
+      </section>
+    </main>
+
+    <script src="validation.js"></script>
+  </body>
+</html>
