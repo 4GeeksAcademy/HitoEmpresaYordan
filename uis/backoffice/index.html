@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="theme-color" content="#172521" />
+        <meta name="description" content="Análisis de calidad y satisfacción de incidencias de soporte Nexova." />
+        <meta name="nexova-api-base-url" content="https://glorious-meme-g4g9gq756x65hv54j-8000.app.github.dev" />
+        <title>Análisis de incidencias | Nexova Operaciones</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="styles.css" />
+        <script src="app.js" defer></script>
+    </head>
+    <body>
+        <a class="skip-link" href="#main-content">Saltar al contenido</a>
+        <header class="topbar">
+            <a class="brand" href="../../index.html" aria-label="Nexova, inicio">
+                <span class="brand-mark" aria-hidden="true">N</span>
+                <span>NEXOVA <span class="brand-suffix">OPERACIONES</span></span>
+            </a>
+            <nav class="main-nav" aria-label="Menú principal">
+                <a href="../../index.html">Sitio principal</a>
+                <a class="active" href="./" aria-current="page">Análisis de incidencias</a>
+            </nav>
+            <span class="workspace-label"><span class="status-dot" aria-hidden="true"></span> BACKOFFICE</span>
+        </header>
+
+        <main id="main-content" class="page-shell">
+            <section class="page-heading" aria-labelledby="page-title">
+                <div>
+                    <p class="eyebrow">SOPORTE <span>/</span> CALIDAD</p>
+                    <h1 id="page-title">Análisis de incidencias</h1>
+                    <p class="heading-copy">Revisión de registros, estados y satisfacción del cliente.</p>
+                </div>
+                <button id="downloadButton" class="button button-dark" type="button" disabled>
+                    <span aria-hidden="true">↓</span> Descargar CSV
+                </button>
+            </section>
+
+            <section class="upload-section" aria-labelledby="upload-title">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-index">01 <span>·</span> IMPORTAR DATOS</p>
+                        <h2 id="upload-title">Archivo de incidencias</h2>
+                    </div>
+                    <span class="file-format">CSV</span>
+                </div>
+                <div id="dropZone" class="drop-zone">
+                    <input id="fileInput" class="visually-hidden" type="file" accept=".csv,text/csv" />
+                    <span class="upload-symbol" aria-hidden="true">↑</span>
+                    <p class="drop-title">Suelta aquí el archivo CSV</p>
+                    <p id="fileName" class="drop-detail">o selecciónalo desde tu equipo</p>
+                    <button id="selectFileButton" class="button button-outline" type="button">Seleccionar archivo</button>
+                </div>
+                <div class="upload-footer">
+                    <p id="uploadStatus" class="status-message" role="status" aria-live="polite">Esperando un archivo.</p>
+                    <p class="privacy-note">El análisis no muestra direcciones de correo.</p>
+                </div>
+            </section>
+
+            <section id="results" class="results-section" aria-labelledby="results-title" hidden>
+                <div class="section-heading results-heading">
+                    <div>
+                        <p class="section-index">02 <span>·</span> INFORME</p>
+                        <h2 id="results-title">Resumen del análisis</h2>
+                    </div>
+                    <p id="resultCount" class="result-count"></p>
+                </div>
+
+                <div class="metric-grid" aria-label="Métricas generales">
+                    <article class="metric-card metric-total">
+                        <p>Total de registros</p>
+                        <strong id="totalRecords">0</strong>
+                        <span>filas analizadas</span>
+                    </article>
+                    <article class="metric-card metric-valid">
+                        <p>Registros válidos</p>
+                        <strong id="validRecords">0</strong>
+                        <span>incluidos en los desgloses</span>
+                    </article>
+                    <article class="metric-card metric-invalid">
+                        <p>Registros inválidos</p>
+                        <strong id="invalidRecords">0</strong>
+                        <span>requieren revisión</span>
+                    </article>
+                </div>
+
+                <div id="invalidNotice" class="invalid-notice" role="status" aria-live="polite" hidden>
+                    <div class="notice-heading">
+                        <span class="notice-icon" aria-hidden="true">!</span>
+                        <div>
+                            <h3 id="invalidTitle"></h3>
+                            <p>Los registros con errores no se incluyen en los desgloses válidos.</p>
+                        </div>
+                    </div>
+                    <ul id="invalidBreakdown" class="invalid-list"></ul>
+                </div>
+
+                <div class="breakdown-grid">
+                    <section class="data-panel" aria-labelledby="category-title">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="section-index">DISTRIBUCIÓN</p>
+                                <h3 id="category-title">Por categoría</h3>
+                            </div>
+                            <span class="panel-unit">VÁLIDOS</span>
+                        </div>
+                        <div id="categoryBreakdown" class="bar-list"></div>
+                    </section>
+
+                    <section class="data-panel" aria-labelledby="status-title">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="section-index">DISTRIBUCIÓN</p>
+                                <h3 id="status-title">Por estado</h3>
+                            </div>
+                            <span class="panel-unit">VÁLIDOS</span>
+                        </div>
+                        <div id="statusBreakdown" class="bar-list"></div>
+                    </section>
+                </div>
+
+                <section class="satisfaction-panel" aria-labelledby="satisfaction-title">
+                    <div class="satisfaction-summary">
+                        <p class="section-index">EXPERIENCIA DE CLIENTE</p>
+                        <h3 id="satisfaction-title">Índice de satisfacción</h3>
+                        <p id="satisfactionSample" class="satisfaction-sample"></p>
+                        <div class="average-score">
+                            <strong id="averageScore">0.00</strong>
+                            <span>/ 5</span>
+                        </div>
+                        <p class="average-label">Puntuación media</p>
+                    </div>
+                    <div class="score-distribution">
+                        <p class="section-index">DISTRIBUCIÓN DE PUNTUACIONES</p>
+                        <div id="scoreBreakdown" class="score-list"></div>
+                    </div>
+                </section>
+                <p id="downloadStatus" class="download-status" role="status" aria-live="polite"></p>
+            </section>
+        </main>
+        <footer class="page-footer">
+            <span>NEXOVA <span class="footer-dot">·</span> OPERACIONES</span>
+            <span>ANÁLISIS DE SOPORTE</span>
+        </footer>
+    </body>
+</html>
