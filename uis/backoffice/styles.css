@@ -73,12 +73,37 @@ h1, h2, h3, p { margin-top: 0; }
 h1 { margin: 12px 0 7px; font-size: clamp(29px, 4vw, 40px); line-height: 1.12; letter-spacing: 0; }
 .heading-copy { margin: 0; color: var(--ink-soft); font-size: 14px; }
 .button { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 16px; border: 1px solid transparent; border-radius: 5px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background-color .18s ease, color .18s ease, transform .18s ease; }
+.button { text-decoration: none; }
 .button:not(:disabled):hover { transform: translateY(-1px); }
 .button-dark { color: #f9fbf6; background: var(--ink); }
 .button-dark:not(:disabled):hover { background: #2d453b; }
 .button-dark:disabled { color: #9aa59e; background: #dce2dc; cursor: not-allowed; }
 .button-outline { color: var(--ink); background: var(--surface); border-color: #aeb9b1; }
 .button-outline:hover { background: var(--mint-wash); border-color: var(--lime-dark); }
+
+.overview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.overview-card { min-height: 204px; padding: 19px 20px; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid #81a73c; border-radius: 5px; }
+.overview-support { border-top-color: var(--coral); }
+.overview-training { border-top-color: var(--blue); }
+.overview-label { margin: 0 0 17px; color: var(--muted); font-family: var(--font-data); font-size: 9px; letter-spacing: .08em; }
+.overview-label span { color: #a9c95f; }
+.overview-value { display: block; overflow-wrap: anywhere; font-family: var(--font-data); font-size: 23px; font-weight: 500; line-height: 1.2; }
+.overview-card > p:not(.overview-label) { min-height: 32px; margin: 6px 0 14px; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }
+.overview-detail { display: flex; justify-content: space-between; gap: 8px; padding-top: 8px; color: var(--muted); border-top: 1px solid var(--line); font-size: 10px; }
+.overview-detail + .overview-detail { margin-top: 7px; }
+.overview-detail b { color: var(--ink); font-weight: 600; text-align: right; }
+.overview-footnote { margin: 10px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.sla-strip { display: grid; grid-template-columns: minmax(180px, 1.1fr) repeat(3, minmax(100px, .7fr)) minmax(220px, 1.2fr); gap: 16px; align-items: center; margin: 26px 0 44px; padding: 20px 22px; background: #eaf0e4; border: 1px solid #d8e1d1; border-radius: 5px; }
+.sla-heading h2 { margin: 6px 0 4px; font-size: 17px; }
+.sla-heading > p:last-child { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.sla-item { display: grid; gap: 5px; }
+.sla-item strong { color: #4e6a2b; font-family: var(--font-data); font-size: 17px; font-weight: 500; }
+.sla-item span { color: var(--ink-soft); font-size: 9px; line-height: 1.4; }
+.sla-alert { display: grid; gap: 5px; padding-left: 15px; border-left: 2px solid var(--coral); }
+.sla-alert strong { color: var(--coral); font-size: 10px; }
+.sla-alert span { color: var(--ink-soft); font-size: 9px; line-height: 1.5; }
+.results-actions { display: flex; align-items: center; gap: 15px; }
+.results-actions .button { white-space: nowrap; }
 
 .upload-section, .data-panel, .satisfaction-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 .upload-section { padding: 24px; }
@@ -167,6 +192,12 @@ h1 { margin: 12px 0 7px; font-size: clamp(29px, 4vw, 40px); line-height: 1.12; l
     .page-shell { width: min(100% - 32px, 620px); padding: 34px 0 52px; }
     .page-heading { align-items: flex-start; flex-direction: column; margin-bottom: 26px; }
     .button-dark { width: 100%; }
+    .overview-grid { grid-template-columns: 1fr; }
+    .overview-card { min-height: auto; }
+    .sla-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; margin: 22px 0 36px; padding: 17px; }
+    .sla-heading, .sla-alert { grid-column: 1 / -1; }
+    .sla-alert { padding: 12px 0 0; border-top: 1px solid #d1d9cc; border-left: 0; }
+    .results-actions { width: 100%; justify-content: space-between; }
     .upload-section { padding: 18px; }
     .metric-grid { gap: 8px; }
     .metric-card { min-height: 118px; padding: 14px 12px; }

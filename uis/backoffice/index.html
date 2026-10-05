@@ -6,7 +6,7 @@
         <meta name="theme-color" content="#172521" />
         <meta name="description" content="Análisis de calidad y satisfacción de incidencias de soporte Nexova." />
         <meta name="nexova-api-base-url" content="https://glorious-meme-g4g9gq756x65hv54j-8000.app.github.dev" />
-        <title>Análisis de incidencias | Nexova Operaciones</title>
+        <title>Operaciones Nexova | Resumen</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -16,33 +16,69 @@
     <body>
         <a class="skip-link" href="#main-content">Saltar al contenido</a>
         <header class="topbar">
-            <a class="brand" href="../../index.html" aria-label="Nexova, inicio">
+            <a class="brand" href="#dashboard" aria-label="Nexova Operaciones, inicio">
                 <span class="brand-mark" aria-hidden="true">N</span>
                 <span>NEXOVA <span class="brand-suffix">OPERACIONES</span></span>
             </a>
             <nav class="main-nav" aria-label="Menú principal">
                 <a href="../../index.html">Sitio principal</a>
-                <a class="active" href="./" aria-current="page">Análisis de incidencias</a>
+                <a class="active" href="#dashboard" aria-current="page">Resumen</a>
+                <a href="#analysis">Análisis de incidencias</a>
             </nav>
             <span class="workspace-label"><span class="status-dot" aria-hidden="true"></span> BACKOFFICE</span>
         </header>
 
         <main id="main-content" class="page-shell">
-            <section class="page-heading" aria-labelledby="page-title">
+            <section id="dashboard" class="page-heading" aria-labelledby="page-title">
                 <div>
-                    <p class="eyebrow">SOPORTE <span>/</span> CALIDAD</p>
-                    <h1 id="page-title">Análisis de incidencias</h1>
-                    <p class="heading-copy">Revisión de registros, estados y satisfacción del cliente.</p>
+                    <p class="eyebrow">NEXOVA <span>/</span> OPERACIONES</p>
+                    <h1 id="page-title">Resumen de operaciones</h1>
+                    <p class="heading-copy">Condiciones de referencia y acceso a las herramientas de servicio.</p>
                 </div>
-                <button id="downloadButton" class="button button-dark" type="button" disabled>
-                    <span aria-hidden="true">↓</span> Descargar CSV
-                </button>
+                <a class="button button-dark" href="#analysis"><span aria-hidden="true">↓</span> Abrir análisis de soporte</a>
             </section>
 
-            <section class="upload-section" aria-labelledby="upload-title">
+            <section class="overview-grid" aria-label="Condiciones comerciales de referencia">
+                <article class="overview-card overview-headhunting">
+                    <p class="overview-label">01 <span>·</span> HEADHUNTING</p>
+                    <strong class="overview-value">22%</strong>
+                    <p>del salario anual bruto del cargo contratado</p>
+                    <div class="overview-detail">Facturación estándar <b>30 / 30 / 40</b></div>
+                    <div class="overview-detail">Garantía de reemplazo <b>6 meses*</b></div>
+                </article>
+                <article class="overview-card overview-support">
+                    <p class="overview-label">02 <span>·</span> SOPORTE AL CLIENTE</p>
+                    <strong class="overview-value">USD 1.800–2.400</strong>
+                    <p>por agente al mes, según idioma y especialización</p>
+                    <div class="overview-detail">Equipo mínimo <b>5 agentes</b></div>
+                    <div class="overview-detail">Contrato mínimo <b>6 meses</b></div>
+                </article>
+                <article class="overview-card overview-training">
+                    <p class="overview-label">03 <span>·</span> FORMACIÓN</p>
+                    <strong class="overview-value">4 · 8 · 12</strong>
+                    <p>semanas de programa, hasta 15 personas</p>
+                    <div class="overview-detail">Precios desde <b>USD 3.500</b></div>
+                    <div class="overview-detail">Grupos mayores <b>cotización a medida</b></div>
+                </article>
+            </section>
+            <p class="overview-footnote">*La garantía aplica si la salida antes de seis meses es atribuible al proceso de selección. Importes y excepciones sujetos a las condiciones contractuales vigentes.</p>
+
+            <section class="sla-strip" aria-labelledby="sla-title">
+                <div class="sla-heading">
+                    <p class="section-index">SEGUIMIENTO DE BÚSQUEDAS</p>
+                    <h2 id="sla-title">Promedios de entrega</h2>
+                    <p>Referencias operativas, no garantías salvo acuerdo contractual.</p>
+                </div>
+                <div class="sla-item"><strong>8 sem.</strong><span>Ejecutivo · terna de 3</span></div>
+                <div class="sla-item"><strong>6 sem.</strong><span>Gerencial · terna de 3–4</span></div>
+                <div class="sla-item"><strong>5 sem.</strong><span>Técnico especializado · terna de 3</span></div>
+                <div class="sla-alert"><strong>Semana 4</strong><span>Escalar búsqueda ejecutiva sin candidato calificado a Operaciones y notificar al cliente con un plan.</span></div>
+            </section>
+
+            <section id="analysis" class="upload-section" aria-labelledby="upload-title">
                 <div class="section-heading">
                     <div>
-                        <p class="section-index">01 <span>·</span> IMPORTAR DATOS</p>
+                        <p class="section-index">HERRAMIENTA <span>·</span> SOPORTE Y CALIDAD</p>
                         <h2 id="upload-title">Archivo de incidencias</h2>
                     </div>
                     <span class="file-format">CSV</span>
@@ -63,10 +99,15 @@
             <section id="results" class="results-section" aria-labelledby="results-title" hidden>
                 <div class="section-heading results-heading">
                     <div>
-                        <p class="section-index">02 <span>·</span> INFORME</p>
+                        <p class="section-index">ANÁLISIS <span>·</span> INFORME</p>
                         <h2 id="results-title">Resumen del análisis</h2>
                     </div>
-                    <p id="resultCount" class="result-count"></p>
+                    <div class="results-actions">
+                        <p id="resultCount" class="result-count"></p>
+                        <button id="downloadButton" class="button button-dark" type="button" disabled>
+                            <span aria-hidden="true">↓</span> Descargar CSV
+                        </button>
+                    </div>
                 </div>
 
                 <div class="metric-grid" aria-label="Métricas generales">
