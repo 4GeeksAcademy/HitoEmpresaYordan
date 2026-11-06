@@ -112,3 +112,91 @@ class Supplier(SupplierBase):
 
     id: int
     updated_at: datetime = Field(default_factory=utc_now)
+
+
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    MANAGER = "manager"
+    USER = "user"
+
+
+class UserCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(..., max_length=254, pattern=EMAIL_PATTERN)
+    password: str = Field(..., min_length=8)
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    phone: Optional[str] = Field(None, max_length=50)
+    address: Optional[str] = Field(None, max_length=500)
+
+
+class UserUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: Optional[str] = Field(None, max_length=254, pattern=EMAIL_PATTERN)
+    password: Optional[str] = Field(None, min_length=8)
+    role: Optional[UserRole] = None
+
+    @model_validator(mode="after")
+    def reject_explicit_nulls(self):
+        if any(getattr(self, field) is None for field in self.model_fields_set):
+            raise ValueError("Los campos enviados no pueden ser null")
+        return self
+
+
+class User(BaseModel):
+    id: int
+    email: str = Field(..., max_length=254, pattern=EMAIL_PATTERN)
+    hashed_password: str
+    is_active: bool
+    role: UserRole
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class UserRead(BaseModel):
+    id: int
+    email: str
+    is_active: bool
+    role: UserRole
+    created_at: datetime
+
+
+class ProfileCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: int
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    phone: Optional[str] = Field(None, max_length=50)
+    address: Optional[str] = Field(None, max_length=500)
+
+
+class Profile(BaseModel):
+    id: int
+    user_id: int
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+
+
+class ProfileUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    phone: Optional[str] = Field(None, max_length=50)
+    address: Optional[str] = Field(None, max_length=500)
+
+
+class UserLogin(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(..., max_length=254, pattern=EMAIL_PATTERN)
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class AuthMe(UserRead):
+    profile: Optional[Profile] = None

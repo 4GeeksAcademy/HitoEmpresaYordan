@@ -5,9 +5,13 @@ description = "API de gestión de proveedores de Nexova"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",
+    "libpass[bcrypt]>=1.9.4",
     "pydantic>=2.7",
+    "python-dotenv>=1.2.4",
+    "python-jose[cryptography]>=3.5.0",
+    "python-multipart>=0.0.33",
     "tinydb>=4.8",
-    "uvicorn>=0.30",
+    "uvicorn[standard]>=0.30",
 ]
 
 [project.scripts]

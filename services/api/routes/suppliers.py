@@ -1,9 +1,10 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from tinydb import Query
 from tinydb.table import Document
 
+from auth import get_current_user
 from database import db_lock, suppliers_table
 from models import (
     Country,
@@ -15,7 +16,10 @@ from models import (
     utc_now,
 )
 
-router = APIRouter(prefix="/suppliers", tags=["suppliers"])
+router = APIRouter(
+    prefix="/suppliers",
+    tags=["suppliers"],
+)
 
 
 def to_supplier(doc: Document) -> Supplier:
@@ -30,7 +34,10 @@ def get_or_404(supplier_id: int) -> Document:
 
 
 @router.post("", response_model=Supplier, status_code=status.HTTP_201_CREATED)
-def create_supplier(payload: SupplierCreate) -> Supplier:
+def create_supplier(
+    payload: SupplierCreate,
+    current_user: dict = Depends(get_current_user),
+) -> Supplier:
     data = {**payload.model_dump(mode="json"), "updated_at": utc_now().isoformat()}
     with db_lock:
         supplier_id = suppliers_table.insert(data)
@@ -41,6 +48,7 @@ def create_supplier(payload: SupplierCreate) -> Supplier:
 def list_suppliers(
     country: Optional[Country] = None,
     category: Optional[SupplierCategory] = None,
+    current_user: dict = Depends(get_current_user),
 ) -> List[Supplier]:
     q = Query()
     conditions = []
@@ -61,14 +69,21 @@ def list_suppliers(
 
 
 @router.get("/{supplier_id}", response_model=Supplier)
-def get_supplier(supplier_id: int) -> Supplier:
+def get_supplier(
+    supplier_id: int,
+    current_user: dict = Depends(get_current_user),
+) -> Supplier:
     with db_lock:
         doc = get_or_404(supplier_id)
     return to_supplier(doc)
 
 
 @router.patch("/{supplier_id}/rate", response_model=Supplier)
-def update_rate(supplier_id: int, payload: SupplierRateUpdate) -> Supplier:
+def update_rate(
+    supplier_id: int,
+    payload: SupplierRateUpdate,
+    current_user: dict = Depends(get_current_user),
+) -> Supplier:
     with db_lock:
         get_or_404(supplier_id)
         suppliers_table.update(
@@ -80,7 +95,11 @@ def update_rate(supplier_id: int, payload: SupplierRateUpdate) -> Supplier:
 
 
 @router.patch("/{supplier_id}/status", response_model=Supplier)
-def update_status(supplier_id: int, payload: SupplierStatusUpdate) -> Supplier:
+def update_status(
+    supplier_id: int,
+    payload: SupplierStatusUpdate,
+    current_user: dict = Depends(get_current_user),
+) -> Supplier:
     # Según el BRIEFING, updated_at solo refleja cambios de tarifa
     with db_lock:
         get_or_404(supplier_id)
@@ -90,7 +109,10 @@ def update_status(supplier_id: int, payload: SupplierStatusUpdate) -> Supplier:
 
 
 @router.delete("/{supplier_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_supplier(supplier_id: int) -> Response:
+def delete_supplier(
+    supplier_id: int,
+    current_user: dict = Depends(get_current_user),
+) -> Response:
     with db_lock:
         get_or_404(supplier_id)
         suppliers_table.remove(doc_ids=[supplier_id])
