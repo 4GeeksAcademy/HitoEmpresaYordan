@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { removeToken } from "@/src/services/api";
 
 const LINKS = [
   { href: "/", label: "Inicio" },
@@ -31,6 +32,16 @@ export function AppNav() {
           );
         })}
       </nav>
+      <button
+        type="button"
+        onClick={() => {
+          removeToken();
+          window.location.replace("/login");
+        }}
+        className="mx-3 mb-4 rounded-md px-3 py-2 text-left text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white"
+      >
+        Cerrar sesión
+      </button>
     </aside>
   );
 }
