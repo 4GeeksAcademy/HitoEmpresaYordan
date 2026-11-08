@@ -1,6 +1,8 @@
 # Python / uv
 .venv/
 __pycache__/
+.env
+data/db.json
 
 # Base de datos local de TinyDB (se regenera con `uv run seed`)
 services/api/data/
