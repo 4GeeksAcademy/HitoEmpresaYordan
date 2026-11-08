@@ -100,7 +100,7 @@ function mapStatusFromApi(value: string | undefined): CandidateStatus {
   if (["hired", "accepted", "closed_won"].includes(normalized)) return "contratado";
   if (["rejected", "discarded", "closed_lost"].includes(normalized)) return "rechazado";
 
-  return value;
+  return "aplicado";
 }
 
 function mapStatusToApi(value: CandidateStatus): string {
@@ -124,7 +124,7 @@ function mapStageFromApi(value: string | undefined): CandidateStage {
   if (["hired"].includes(normalized)) return "hired";
   if (["discarded", "descartado"].includes(normalized)) return "descartado";
 
-  return value;
+  return "screening";
 }
 
 function mapStageToApi(value: CandidateStage): string {
