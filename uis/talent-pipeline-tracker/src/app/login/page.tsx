@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import type { FormEvent } from "react";
 import { loginUser } from "@/src/services/auth";
 import { setAccessToken } from "@/src/services/auth-session";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,12 @@ export default function LoginPage() {
           Accede a tu pipeline de candidaturas.
         </p>
 
+        {searchParams.get("passwordReset") === "success" && (
+          <p className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800" role="status">
+            Tu contraseña se ha restablecido. Inicia sesión con tu nueva contraseña.
+          </p>
+        )}
+
         <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -78,6 +85,12 @@ export default function LoginPage() {
               type="password"
               value={password}
             />
+            <Link
+              className="mt-2 inline-block text-sm font-semibold text-sky-700 underline-offset-2 hover:underline"
+              href="/forgot-password"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
 
           {error && (
@@ -103,5 +116,13 @@ export default function LoginPage() {
         </p>
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="flex min-h-screen items-center justify-center px-4" role="status">Cargando...</main>}>
+      <LoginForm />
+    </Suspense>
   );
 }

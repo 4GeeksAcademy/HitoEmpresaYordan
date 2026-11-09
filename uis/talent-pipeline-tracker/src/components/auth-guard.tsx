@@ -11,7 +11,7 @@ import {
   subscribeToAuthSession,
 } from "@/src/services/auth-session";
 
-const PUBLIC_PATHS = new Set(["/login", "/register"]);
+const PUBLIC_PATHS = new Set(["/login", "/register", "/forgot-password", "/reset-password"]);
 
 export function AuthGuard({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();

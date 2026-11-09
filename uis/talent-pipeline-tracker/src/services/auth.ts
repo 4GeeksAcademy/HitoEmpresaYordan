@@ -112,6 +112,22 @@ export function registerUser(input: RegisterUserInput): Promise<unknown> {
   });
 }
 
+export function requestPasswordReset(email: string): Promise<unknown> {
+  return request("/auth/forgot-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resetPassword(token: string, newPassword: string): Promise<unknown> {
+  return request("/auth/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, new_password: newPassword }),
+  });
+}
+
 export async function loginUser(email: string, password: string): Promise<LoginResponse> {
   const body = await request<Partial<LoginResponse>>("/auth/login", {
     method: "POST",
