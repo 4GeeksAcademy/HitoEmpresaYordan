@@ -57,6 +57,31 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
+export function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem("access_token");
+}
+
+export async function login(email: string, password: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ username: email, password }),
+  });
+
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new ApiError(formatDetail(body?.detail, response.status), response.status);
+  }
+
+  if (typeof body?.access_token !== "string" || !body.access_token) {
+    throw new ApiError("La API no devolvió un token válido.", response.status);
+  }
+
+  window.localStorage.setItem("access_token", body.access_token);
+  window.dispatchEvent(new Event("nexova:auth-change"));
+}
+
 export function listSuppliers(filters: SupplierFilters, signal?: AbortSignal) {
   const params = new URLSearchParams();
   if (filters.country) params.set("country", filters.country);

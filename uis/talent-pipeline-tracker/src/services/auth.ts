@@ -11,6 +11,25 @@ export interface LoginResponse {
   token_type?: string;
 }
 
+export interface AccountProfile {
+  id: number;
+  user_id: number;
+  name: string | null;
+  phone: string | null;
+  address: string | null;
+}
+
+export interface CurrentAccount {
+  email: string;
+  profile: AccountProfile | null;
+}
+
+export interface UpdateAccountProfileInput {
+  name: string | null;
+  phone: string | null;
+  address: string | null;
+}
+
 export class AuthenticationApiError extends Error {
   constructor(
     message: string,
@@ -91,4 +110,34 @@ export async function loginUser(email: string, password: string): Promise<LoginR
   }
 
   return body as LoginResponse;
+}
+
+function getAuthorizationHeader(): Record<string, string> {
+  const accessToken = window.localStorage.getItem("access_token");
+
+  if (!accessToken) {
+    throw new Error("Tu sesión no está activa. Inicia sesión para continuar.");
+  }
+
+  return { Authorization: `Bearer ${accessToken}` };
+}
+
+export function getCurrentAccount(): Promise<CurrentAccount> {
+  return request("/auth/me", {
+    method: "GET",
+    headers: getAuthorizationHeader(),
+  });
+}
+
+export function updateAccountProfile(
+  profile: UpdateAccountProfileInput
+): Promise<AccountProfile> {
+  return request("/profiles/me", {
+    method: "PUT",
+    headers: {
+      ...getAuthorizationHeader(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(profile),
+  });
 }
