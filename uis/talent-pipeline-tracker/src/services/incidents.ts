@@ -1,6 +1,41 @@
 import { ApiError, request } from "@/src/services/api";
 import { getAuthorizationHeader } from "@/src/services/auth-session";
-import type { Incident, IncidentFieldErrors, IncidentFilters, IncidentInput, IncidentStatus } from "@/src/types/incident";
+import {
+  INCIDENT_BRANCH_LABELS, INCIDENT_CATEGORY_LABELS, INCIDENT_ORIGIN_LABELS, INCIDENT_STATUS_LABELS,
+  type Incident, type IncidentFieldErrors, type IncidentFilters, type IncidentInput, type IncidentStatus, type IncidentSummary,
+} from "@/src/types/incident";
+
+export async function getIncidentSummary(signal?: AbortSignal): Promise<IncidentSummary> {
+  const data = await request<unknown>("/api/incidents/summary", {
+    headers: getAuthorizationHeader(), signal,
+  }, "/backend");
+  if (!data || typeof data !== "object") throw new ApiError("Resumen no válido", 502, null);
+  const summary = data as Record<string, unknown>;
+  const total = summary.total;
+  if (typeof total !== "number" || !Number.isSafeInteger(total) || total < 0) {
+    throw new ApiError("Total no válido", 502, null);
+  }
+  const groups = {
+    by_status: INCIDENT_STATUS_LABELS,
+    by_category: INCIDENT_CATEGORY_LABELS,
+    by_origin: INCIDENT_ORIGIN_LABELS,
+    by_branch: INCIDENT_BRANCH_LABELS,
+  };
+  for (const [field, labels] of Object.entries(groups)) {
+    const counts = summary[field];
+    if (!counts || typeof counts !== "object" || Array.isArray(counts)) throw new ApiError("Métricas no válidas", 502, null);
+    let sum = 0;
+    for (const key of Object.keys(labels)) {
+      const count = (counts as Record<string, unknown>)[key];
+      if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) {
+        throw new ApiError("Conteo no válido", 502, null);
+      }
+      sum += count;
+    }
+    if (sum !== total) throw new ApiError("Totales inconsistentes", 502, null);
+  }
+  return data as IncidentSummary;
+}
 
 export function listIncidents(filters: IncidentFilters, signal?: AbortSignal) {
   const params = new URLSearchParams();

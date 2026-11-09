@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CandidateList } from "@/src/components/candidate-list";
 import { FiltersBar } from "@/src/components/filters-bar";
 import { NewCandidateForm } from "@/src/components/new-candidate-form";
+import { IncidentSummaryPanel } from "@/src/components/incident-summary";
 import { createCandidate, getCandidates } from "@/src/services/api";
 import type { Candidate, CreateCandidateInput } from "@/src/types";
 import { logout } from "@/src/services/auth-session";
@@ -132,6 +133,8 @@ export function NexovaDashboard() {
           </button>
         </nav>
       </header>
+
+      <IncidentSummaryPanel />
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-4">

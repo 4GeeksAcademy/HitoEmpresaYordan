@@ -45,3 +45,14 @@ errores con reintento y cambio de estado por fila. Los cambios fallidos revierte
 al valor anterior; los estados finales no se pueden editar. Durante un cambio
 de estado se bloquean los filtros para evitar que una recarga sustituya la fila
 pendiente. Los tipos y catálogos TypeScript están en `packages/shared/types/incidents.ts`.
+
+El panel principal incluye un resumen independiente que consulta
+`GET /api/incidents/summary` mediante el mismo proxy autenticado. Muestra el
+total y los conteos por estado, categoría, origen y sede con barras proporcionales;
+cuando no hay incidencias, mantiene todas las categorías visibles con valor cero.
+Valida la estructura, los conteos y la coherencia de los totales antes de mostrarlos.
+
+La consulta de métricas no bloquea la carga ni los controles de candidaturas.
+Mientras espera muestra carga; tras 5 segundos avisa de la demora y tras 20 segundos
+cancela la petición y ofrece reintento. Los errores de red, API o formato solo
+afectan al resumen. Al abandonar la página, cancela la petición y sus temporizadores.

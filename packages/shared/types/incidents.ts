@@ -56,5 +56,13 @@ export interface Incident extends IncidentInput {
   updated_at: string;
 }
 
+export interface IncidentSummary {
+  total: number;
+  by_status: Record<IncidentStatus, number>;
+  by_category: Record<IncidentCategory, number>;
+  by_origin: Record<IncidentOrigin, number>;
+  by_branch: Record<IncidentBranch, number>;
+}
+
 export type IncidentFilters = Partial<Pick<IncidentInput, "status" | "origin" | "branch" | "category">>;
 export type IncidentFieldErrors = Partial<Record<keyof IncidentInput, string>>;
