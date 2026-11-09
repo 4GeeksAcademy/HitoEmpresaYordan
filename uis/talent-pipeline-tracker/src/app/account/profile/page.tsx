@@ -99,6 +99,9 @@ export default function AccountProfilePage() {
         <p className="mt-2 text-sm text-slate-600">
           Consulta tu cuenta y actualiza tus datos de contacto.
         </p>
+        <Link className="mt-4 inline-block text-sm font-semibold text-sky-700 hover:underline" href="/account/change-password">
+          Cambiar contraseña
+        </Link>
       </header>
 
       {isLoading ? (

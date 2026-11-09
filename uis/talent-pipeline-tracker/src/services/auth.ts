@@ -128,6 +128,14 @@ export function resetPassword(token: string, newPassword: string): Promise<unkno
   });
 }
 
+export function changePassword(currentPassword: string, newPassword: string): Promise<unknown> {
+  return request("/auth/change-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  }, true);
+}
+
 export async function loginUser(email: string, password: string): Promise<LoginResponse> {
   const body = await request<Partial<LoginResponse>>("/auth/login", {
     method: "POST",
