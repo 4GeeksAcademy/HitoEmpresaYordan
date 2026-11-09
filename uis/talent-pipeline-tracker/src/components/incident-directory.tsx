@@ -35,9 +35,15 @@ export function IncidentDirectory() {
     async function load() {
       try {
         const records = await listIncidents(filters, controller.signal);
-        if (!controller.signal.aborted) setView({ records, loading: false, error: null });
+        if (!controller.signal.aborted) setView((previous) => ({ ...previous, records, error: null }));
       } catch (error) {
-        if (!controller.signal.aborted) setView({ records: [], loading: false, error: incidentErrorMessage(error) });
+        if (!controller.signal.aborted) {
+          setView((previous) => ({ ...previous, records: [], error: incidentErrorMessage(error) }));
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setView((previous) => ({ ...previous, loading: false }));
+        }
       }
     }
     void load();

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ApiError,
   addCandidateNote,
   deleteCandidateNote,
   getCandidateById,
@@ -107,7 +108,7 @@ export function CandidateDetailPage({ id }: CandidateDetailPageProps) {
         fechaAplicacion: candidateResponse.fechaAplicacion,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo cargar el detalle.";
+      const message = err instanceof ApiError ? err.message : "No se pudo cargar el detalle. Inténtalo de nuevo.";
       setError(message);
     } finally {
       setLoading(false);
@@ -132,7 +133,7 @@ export function CandidateDetailPage({ id }: CandidateDetailPageProps) {
       setEditForm((prev) => ({ ...prev, estado: updated.estado }));
       setActionMessage("Estado actualizado correctamente.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo actualizar el estado.";
+      const message = err instanceof ApiError ? err.message : "No se pudo actualizar el estado. Inténtalo de nuevo.";
       setActionError(message);
     } finally {
       setUpdatingStatus(false);
@@ -152,7 +153,7 @@ export function CandidateDetailPage({ id }: CandidateDetailPageProps) {
       setEditForm((prev) => ({ ...prev, etapa: updated.etapa }));
       setActionMessage("Etapa actualizada correctamente.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo actualizar la etapa.";
+      const message = err instanceof ApiError ? err.message : "No se pudo actualizar la etapa. Inténtalo de nuevo.";
       setActionError(message);
     } finally {
       setUpdatingStage(false);
@@ -199,7 +200,7 @@ export function CandidateDetailPage({ id }: CandidateDetailPageProps) {
       setIsEditOpen(false);
       setActionMessage("Candidatura actualizada correctamente.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo actualizar la candidatura.";
+      const message = err instanceof ApiError ? err.message : "No se pudo actualizar la candidatura. Inténtalo de nuevo.";
       setActionError(message);
     } finally {
       setIsSavingEdit(false);
@@ -226,7 +227,7 @@ export function CandidateDetailPage({ id }: CandidateDetailPageProps) {
       setNewNoteText("");
       setActionMessage("Nota agregada correctamente.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo crear la nota.";
+      const message = err instanceof ApiError ? err.message : "No se pudo crear la nota. Inténtalo de nuevo.";
       setActionError(message);
     } finally {
       setIsAddingNote(false);
@@ -245,7 +246,7 @@ export function CandidateDetailPage({ id }: CandidateDetailPageProps) {
       setNotes((prev) => prev.filter((note) => note.id !== noteId));
       setActionMessage("Nota eliminada correctamente.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo eliminar la nota.";
+      const message = err instanceof ApiError ? err.message : "No se pudo eliminar la nota. Inténtalo de nuevo.";
       setActionError(message);
     } finally {
       setDeletingNoteId(null);
@@ -266,8 +267,11 @@ export function CandidateDetailPage({ id }: CandidateDetailPageProps) {
         <Link href="/" className="text-sm font-medium text-sky-700 hover:underline">
           Volver al listado
         </Link>
-        <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-700">
+        <div role="alert" className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-700">
           {error ?? "No se encontro la candidatura solicitada."}
+          <button type="button" onClick={() => void loadData()} className="ml-3 font-semibold underline">
+            Reintentar
+          </button>
         </div>
       </main>
     );

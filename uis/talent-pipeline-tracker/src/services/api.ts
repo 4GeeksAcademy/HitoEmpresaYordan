@@ -44,6 +44,17 @@ export class ApiError extends Error {
   }
 }
 
+function getApiErrorMessage(status: number): string {
+  if (status === 0) return "No se pudo conectar con el servicio. Comprueba tu conexión e inténtalo de nuevo.";
+  if (status === 401) return "Tu sesión no es válida. Inicia sesión de nuevo.";
+  if (status === 403) return "No tienes permiso para realizar esta acción.";
+  if (status === 404) return "El recurso solicitado ya no está disponible.";
+  if (status === 409) return "El cambio entra en conflicto con los datos actuales.";
+  if (status === 400 || status === 422) return "Revisa los datos e inténtalo de nuevo.";
+  if (status >= 500) return "El servicio no pudo completar la solicitud. Inténtalo de nuevo más tarde.";
+  return "No se pudo completar la solicitud. Inténtalo de nuevo.";
+}
+
 async function parseResponseBody(response: Response): Promise<unknown> {
   if (response.status === 204) return null;
 
@@ -51,6 +62,7 @@ async function parseResponseBody(response: Response): Promise<unknown> {
   if (contentType.includes("application/json")) return response.json();
 
   const text = await response.text();
+  if (response.ok && text) throw new Error("Respuesta de formato no válido");
   return text || null;
 }
 
@@ -58,23 +70,34 @@ export async function request<T>(path: string, init?: RequestInit, baseUrl = pro
   const apiBaseUrl = baseUrl?.replace(/\/+$/, "");
 
   if (!apiBaseUrl) {
-    throw new Error("Falta configurar NEXT_PUBLIC_API_URL");
+    throw new ApiError("No se pudo conectar con el servicio. Inténtalo de nuevo más tarde.", 0, null);
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...Object.fromEntries(new Headers(init?.headers).entries()),
-    },
-    cache: "no-store",
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...Object.fromEntries(new Headers(init?.headers).entries()),
+      },
+      cache: "no-store",
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    throw new ApiError(getApiErrorMessage(0), 0, null);
+  }
 
-  const body = await parseResponseBody(response);
+  let body: unknown;
+  try {
+    body = await parseResponseBody(response);
+  } catch {
+    throw new ApiError("El servicio devolvió una respuesta no válida. Inténtalo de nuevo.", response.status, null);
+  }
 
   if (!response.ok) {
     throw new ApiError(
-      `Error en la API: ${response.status}`,
+      getApiErrorMessage(response.status),
       response.status,
       body
     );
@@ -89,8 +112,22 @@ function readDataField(body: unknown): unknown {
   return container.data ?? body;
 }
 
-function mapStatusFromApi(value?: string): CandidateStatus {
-  switch (value?.toLowerCase()) {
+function asApiRecord(value: unknown): ApiRecord {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new ApiError("El servicio devolvió datos de candidatura no válidos. Inténtalo de nuevo.", 502, null);
+  }
+  return value as ApiRecord;
+}
+
+function asApiNote(value: unknown): ApiNote {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new ApiError("El servicio devolvió datos de nota no válidos. Inténtalo de nuevo.", 502, null);
+  }
+  return value as ApiNote;
+}
+
+function mapStatusFromApi(value?: unknown): CandidateStatus {
+  switch (typeof value === "string" ? value.toLowerCase() : undefined) {
     case "received":
     case "pending":
       return "aplicado";
@@ -114,8 +151,8 @@ function mapStatusToApi(value: CandidateStatus): string {
   }
 }
 
-function mapStageFromApi(value?: string): CandidateStage {
-  switch (value?.toLowerCase()) {
+function mapStageFromApi(value?: unknown): CandidateStage {
+  switch (typeof value === "string" ? value.toLowerCase() : undefined) {
     case "pending": return "screening";
     case "review": return "revision";
     case "personal_interview": return "entrevista-rrhh";
@@ -136,19 +173,19 @@ function mapStageToApi(value: CandidateStage): string {
   }
 }
 
-function mapApiRecordToCandidate(record: ApiRecord): Candidate {
+function mapApiRecordToCandidate(record: ApiRecord | null | undefined): Candidate {
   return {
-    id: record.id,
-    nombre: record.full_name,
-    email: record.email,
-    telefono: record.phone ?? "",
-    puesto: record.position,
-    linkedinUrl: record.linkedin_url ?? "",
-    cvUrl: record.cv_url ?? "",
-    aniosExperiencia: Number(record.experience_years ?? 0),
-    estado: mapStatusFromApi(record.status),
-    etapa: mapStageFromApi(record.stage),
-    fechaAplicacion: record.applied_at ?? new Date().toISOString(),
+    id: record?.id ?? "unknown",
+    nombre: typeof record?.full_name === "string" ? record.full_name : "Candidatura sin nombre",
+    email: typeof record?.email === "string" ? record.email : "",
+    telefono: typeof record?.phone === "string" ? record.phone : "",
+    puesto: typeof record?.position === "string" ? record.position : "Sin puesto indicado",
+    linkedinUrl: typeof record?.linkedin_url === "string" ? record.linkedin_url : "",
+    cvUrl: typeof record?.cv_url === "string" ? record.cv_url : "",
+    aniosExperiencia: Number(record?.experience_years ?? 0) || 0,
+    estado: mapStatusFromApi(record?.status),
+    etapa: mapStageFromApi(record?.stage),
+    fechaAplicacion: typeof record?.applied_at === "string" ? record.applied_at : new Date().toISOString(),
   };
 }
 
@@ -165,14 +202,14 @@ function mapCandidateInputToApi(payload: CreateCandidateInput | UpdateCandidateI
   };
 }
 
-function mapApiNoteToNote(note: ApiNote, candidateId: string | number): Note {
+function mapApiNoteToNote(note: ApiNote | null | undefined, candidateId: string | number): Note {
   return {
-    id: note.id,
-    candidateId: note.record_id ?? candidateId,
-    texto: note.content,
-    createdAt: note.created_at,
-    updatedAt: note.updated_at,
-    createdBy: note.created_by,
+    id: note?.id ?? "unknown",
+    candidateId: note?.record_id ?? candidateId,
+    texto: typeof note?.content === "string" ? note.content : "",
+    createdAt: typeof note?.created_at === "string" ? note.created_at : new Date().toISOString(),
+    updatedAt: note?.updated_at,
+    createdBy: note?.created_by,
   };
 }
 
@@ -180,13 +217,15 @@ export async function getCandidates(): Promise<Candidate[]> {
   const body = await request<unknown>("/records?page=1&limit=200");
   const data = readDataField(body);
 
-  if (!Array.isArray(data)) return [];
-  return data.map((record) => mapApiRecordToCandidate(record as ApiRecord));
+  if (!Array.isArray(data)) {
+    throw new ApiError("No se pudo interpretar el listado de candidaturas. Inténtalo de nuevo.", 502, null);
+  }
+  return data.map((record) => mapApiRecordToCandidate(asApiRecord(record)));
 }
 
 export async function getCandidateById(id: number | string): Promise<Candidate> {
   const body = await request<unknown>(`/records/${id}`);
-  return mapApiRecordToCandidate(readDataField(body) as ApiRecord);
+  return mapApiRecordToCandidate(asApiRecord(readDataField(body)));
 }
 
 export async function createCandidate(payload: CreateCandidateInput): Promise<Candidate> {
@@ -195,7 +234,7 @@ export async function createCandidate(payload: CreateCandidateInput): Promise<Ca
     body: JSON.stringify(mapCandidateInputToApi(payload)),
   });
 
-  const created = mapApiRecordToCandidate(readDataField(body) as ApiRecord);
+  const created = mapApiRecordToCandidate(asApiRecord(readDataField(body)));
   return patchCandidate(created.id, {
     estado: payload.estado,
     etapa: payload.etapa,
@@ -211,7 +250,7 @@ export async function updateCandidate(
     body: JSON.stringify(mapCandidateInputToApi(payload)),
   });
 
-  const updated = mapApiRecordToCandidate(readDataField(body) as ApiRecord);
+  asApiRecord(readDataField(body));
   return patchCandidate(id, {
     estado: payload.estado,
     etapa: payload.etapa,
@@ -230,15 +269,17 @@ export async function patchCandidate(
     }),
   });
 
-  return mapApiRecordToCandidate(readDataField(body) as ApiRecord);
+  return mapApiRecordToCandidate(asApiRecord(readDataField(body)));
 }
 
 export async function getCandidateNotes(id: number | string): Promise<Note[]> {
   const body = await request<unknown>(`/records/${id}/notes`);
   const data = readDataField(body);
 
-  if (!Array.isArray(data)) return [];
-  return data.map((note) => mapApiNoteToNote(note as ApiNote, id));
+  if (!Array.isArray(data)) {
+    throw new ApiError("No se pudo interpretar el listado de notas. Inténtalo de nuevo.", 502, null);
+  }
+  return data.map((note) => mapApiNoteToNote(asApiNote(note), id));
 }
 
 export async function addCandidateNote(
@@ -250,7 +291,7 @@ export async function addCandidateNote(
     body: JSON.stringify({ content: payload.texto }),
   });
 
-  return mapApiNoteToNote(readDataField(body) as ApiNote, id);
+  return mapApiNoteToNote(asApiNote(readDataField(body)), id);
 }
 
 export async function deleteCandidateNote(

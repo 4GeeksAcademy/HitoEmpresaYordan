@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import type { FormEvent } from "react";
-import { loginUser } from "@/src/services/auth";
+import { AuthenticationApiError, loginUser } from "@/src/services/auth";
 import { setAccessToken } from "@/src/services/auth-session";
 
 function LoginForm() {
@@ -26,7 +26,7 @@ function LoginForm() {
       router.replace("/");
     } catch (submitError) {
       setError(
-        submitError instanceof Error
+        submitError instanceof AuthenticationApiError
           ? submitError.message
           : "No se pudo iniciar sesión. Revisa tus credenciales e inténtalo de nuevo."
       );

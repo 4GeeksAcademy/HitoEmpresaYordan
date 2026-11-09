@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ApiError } from "@/src/services/api";
 import type { CandidateStage, CandidateStatus, CreateCandidateInput } from "@/src/types";
 
 interface NewCandidateFormProps {
@@ -58,7 +59,7 @@ export function NewCandidateForm({ onCreate }: NewCandidateFormProps) {
       setMessage("Candidatura registrada con éxito.");
       setForm(initialState);
     } catch (error) {
-      const text = error instanceof Error ? error.message : "No se pudo crear la candidatura.";
+      const text = error instanceof ApiError ? error.message : "No se pudo crear la candidatura. Revisa los datos e inténtalo de nuevo.";
       setMessageType("error");
       setMessage(text);
     } finally {

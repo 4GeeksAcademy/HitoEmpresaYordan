@@ -7,7 +7,7 @@ import { CandidateList } from "@/src/components/candidate-list";
 import { FiltersBar } from "@/src/components/filters-bar";
 import { NewCandidateForm } from "@/src/components/new-candidate-form";
 import { IncidentSummaryPanel } from "@/src/components/incident-summary";
-import { createCandidate, getCandidates } from "@/src/services/api";
+import { ApiError, createCandidate, getCandidates } from "@/src/services/api";
 import type { Candidate, CreateCandidateInput } from "@/src/types";
 import { logout } from "@/src/services/auth-session";
 
@@ -52,7 +52,7 @@ export function NexovaDashboard() {
       const data = await getCandidates();
       setCandidates(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "No fue posible cargar candidatos.";
+      const message = err instanceof ApiError ? err.message : "No fue posible cargar candidatos. Inténtalo de nuevo.";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -151,6 +151,7 @@ export function NexovaDashboard() {
             candidates={visibleCandidates}
             isLoading={isLoading}
             error={error}
+            onRetry={() => void loadCandidates()}
           />
         </div>
 

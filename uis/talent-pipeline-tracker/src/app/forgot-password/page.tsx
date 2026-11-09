@@ -9,17 +9,25 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const submissionStarted = useRef(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submissionStarted.current) return;
+    if (submissionStarted.current || isSubmitting) return;
     submissionStarted.current = true;
     setIsSubmitting(true);
+    setError(null);
 
-    await requestPasswordReset(email.trim()).catch(() => undefined);
-    setIsSubmitted(true);
-    setIsSubmitting(false);
+    try {
+      await requestPasswordReset(email.trim());
+      setIsSubmitted(true);
+    } catch {
+      setError("No se pudo enviar la solicitud. Comprueba tu conexión e inténtalo de nuevo.");
+    } finally {
+      submissionStarted.current = false;
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -58,6 +66,12 @@ export default function ForgotPasswordPage() {
             </button>
           </fieldset>
         </form>
+
+        {error && (
+          <p className="mt-5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-800" role="alert">
+            {error}
+          </p>
+        )}
 
         {isSubmitted && (
           <p className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800" role="status">

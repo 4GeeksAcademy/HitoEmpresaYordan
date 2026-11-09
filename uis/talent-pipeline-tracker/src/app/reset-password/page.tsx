@@ -46,6 +46,7 @@ function ResetPasswordForm() {
       } else {
         setError("No se pudo restablecer la contraseña. Comprueba tu conexión e inténtalo de nuevo.");
       }
+    } finally {
       submissionStarted.current = false;
       setIsSubmitting(false);
     }

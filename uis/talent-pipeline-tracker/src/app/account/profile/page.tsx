@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import {
+  AuthenticationApiError,
   getCurrentAccount,
   updateAccountProfile,
 } from "@/src/services/auth";
@@ -18,6 +19,7 @@ export default function AccountProfilePage() {
   const [email, setEmail] = useState("");
   const [profile, setProfile] = useState(emptyProfile);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -25,32 +27,40 @@ export default function AccountProfilePage() {
   useEffect(() => {
     let isCurrent = true;
 
-    getCurrentAccount()
-      .then((account) => {
+    async function loadAccount() {
+      try {
+        const account = await getCurrentAccount();
         if (!isCurrent) return;
-        setEmail(account.email);
+        setEmail(account?.email ?? "");
         setProfile({
-          name: account.profile?.name ?? "",
-          phone: account.profile?.phone ?? "",
-          address: account.profile?.address ?? "",
+          name: account?.profile?.name ?? "",
+          phone: account?.profile?.phone ?? "",
+          address: account?.profile?.address ?? "",
         });
-      })
-      .catch((loadError: unknown) => {
+      } catch (loadError) {
         if (!isCurrent) return;
         setError(
-          loadError instanceof Error
+          loadError instanceof AuthenticationApiError
             ? loadError.message
             : "No se pudo cargar tu perfil. Inténtalo de nuevo."
         );
-      })
-      .finally(() => {
+      } finally {
         if (isCurrent) setIsLoading(false);
-      });
+      }
+    }
+
+    void loadAccount();
 
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [loadAttempt]);
+
+  function retryLoad() {
+    setError(null);
+    setIsLoading(true);
+    setLoadAttempt((attempt) => attempt + 1);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,7 +82,7 @@ export default function AccountProfilePage() {
       setSuccess("Tus datos de contacto se actualizaron correctamente.");
     } catch (saveError) {
       setError(
-        saveError instanceof Error
+        saveError instanceof AuthenticationApiError
           ? saveError.message
           : "No se pudieron guardar los cambios. Inténtalo de nuevo."
       );
@@ -113,6 +123,9 @@ export default function AccountProfilePage() {
           {error && (
             <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800" role="alert">
               <p>{error}</p>
+              <button type="button" onClick={retryLoad} className="mt-2 font-semibold underline">
+                Reintentar carga
+              </button>
               {error.includes("sesión") && (
                 <Link className="mt-2 inline-block font-semibold underline" href="/login">
                   Ir a iniciar sesión

@@ -47,7 +47,7 @@ function getApiBaseUrl(): string {
   const apiBaseUrl = process.env.NEXT_PUBLIC_AUTH_API_URL?.replace(/\/$/, "");
 
   if (!apiBaseUrl) {
-    throw new Error("Falta configurar NEXT_PUBLIC_API_URL para conectar con la API.");
+    throw new AuthenticationApiError("No se pudo conectar con el servicio. Inténtalo más tarde.", 0, null);
   }
 
   return apiBaseUrl;
@@ -57,24 +57,23 @@ async function readResponseBody(response: Response): Promise<unknown> {
   const contentType = response.headers.get("content-type") ?? "";
 
   if (contentType.includes("application/json")) {
-    return response.json().catch(() => null);
+    return response.json();
   }
 
   const text = await response.text();
   return text || null;
 }
 
-function getResponseMessage(body: unknown, fallback: string): string {
-  if (typeof body === "string" && body.trim()) return body;
-  if (!body || typeof body !== "object") return fallback;
-
-  const detail = (body as Record<string, unknown>).detail;
-  if (typeof detail === "string") return detail;
-  if (typeof (body as Record<string, unknown>).message === "string") {
-    return (body as Record<string, string>).message;
-  }
-
-  return fallback;
+function getResponseMessage(status: number): string {
+  if (status === 0) return "No se pudo conectar con el servicio. Comprueba tu conexión e inténtalo de nuevo.";
+  if (status === 400) return "No se pudo completar la solicitud. Revisa los datos e inténtalo de nuevo.";
+  if (status === 401) return "Credenciales no válidas o sesión expirada. Vuelve a intentarlo.";
+  if (status === 403) return "No tienes permiso para realizar esta acción.";
+  if (status === 404) return "El recurso solicitado ya no está disponible.";
+  if (status === 409) return "Ya existe una cuenta con esos datos.";
+  if (status === 422) return "Revisa los datos indicados e inténtalo de nuevo.";
+  if (status >= 500) return "El servicio no pudo completar la solicitud. Inténtalo de nuevo más tarde.";
+  return "No se pudo completar la solicitud. Inténtalo de nuevo.";
 }
 
 async function request<T>(
@@ -89,13 +88,25 @@ async function request<T>(
     }
   }
 
-  const response = await fetch(`${getApiBaseUrl()}${path}`, { ...init, headers });
-  const body = await readResponseBody(response);
+  let response: Response;
+  try {
+    response = await fetch(`${getApiBaseUrl()}${path}`, { ...init, headers });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    throw new AuthenticationApiError(getResponseMessage(0), 0, null);
+  }
+
+  let body: unknown;
+  try {
+    body = await readResponseBody(response);
+  } catch {
+    throw new AuthenticationApiError("El servicio devolvió una respuesta no válida. Inténtalo de nuevo.", response.status, null);
+  }
 
   if (!response.ok) {
     if (requiresAuth && response.status === 401) logout();
     throw new AuthenticationApiError(
-      getResponseMessage(body, "No se pudo completar la solicitud."),
+      getResponseMessage(response.status),
       response.status,
       body
     );

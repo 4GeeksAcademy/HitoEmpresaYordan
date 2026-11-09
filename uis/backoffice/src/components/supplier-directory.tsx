@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { SupplierForm } from "@/src/components/supplier-form";
 import { SupplierRow } from "@/src/components/supplier-row";
-import { listSuppliers } from "@/src/services/api";
+import { ApiError, listSuppliers } from "@/src/services/api";
 import {
   CATEGORIES,
   CATEGORY_LABELS,
@@ -26,29 +26,38 @@ export function SupplierDirectory() {
   const [filters, setFilters] = useState<SupplierFilters>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [now] = useState(() => Date.now());
 
   useEffect(() => {
     const controller = new AbortController();
-    listSuppliers(filters, controller.signal)
-      .then((data) => {
+    async function loadSuppliers() {
+      try {
+        const data = await listSuppliers(filters, controller.signal);
         setSuppliers(data);
         setError(null);
-      })
-      .catch((err: unknown) => {
+      } catch (err) {
         if (controller.signal.aborted) return;
-        setError(err instanceof Error ? err.message : "Error al cargar los proveedores");
-      })
-      .finally(() => {
+        setError(err instanceof ApiError ? err.message : "No se pudieron cargar los proveedores. Inténtalo de nuevo.");
+      } finally {
         if (!controller.signal.aborted) setLoading(false);
-      });
+      }
+    }
+    void loadSuppliers();
     return () => controller.abort();
-  }, [filters]);
+  }, [filters, reload]);
 
   function updateFilters(next: SupplierFilters) {
     setLoading(true);
+    setError(null);
     setFilters(next);
+  }
+
+  function retry() {
+    setLoading(true);
+    setError(null);
+    setReload((previous) => previous + 1);
   }
 
   function handleCreated(created: Supplier) {
@@ -139,6 +148,9 @@ export function SupplierDirectory() {
       {error && (
         <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {error}
+          <button type="button" onClick={retry} className="ml-3 font-semibold underline">
+            Reintentar
+          </button>
         </div>
       )}
 

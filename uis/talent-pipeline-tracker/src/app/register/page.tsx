@@ -77,44 +77,46 @@ export default function RegisterPage() {
     setError(null);
     setIsSubmitting(true);
 
-    let accountCreated = false;
-
     try {
-      await registerUser({
-        email: values.email.trim(),
-        password: values.password,
-        ...(values.name.trim() ? { name: values.name.trim() } : {}),
-        ...(values.phone.trim() ? { phone: values.phone.trim() } : {}),
-        ...(values.address.trim() ? { address: values.address.trim() } : {}),
-      });
-      accountCreated = true;
+      try {
+        await registerUser({
+          email: values.email.trim(),
+          password: values.password,
+          ...(values.name.trim() ? { name: values.name.trim() } : {}),
+          ...(values.phone.trim() ? { phone: values.phone.trim() } : {}),
+          ...(values.address.trim() ? { address: values.address.trim() } : {}),
+        });
+      } catch (registerError) {
+        if (registerError instanceof AuthenticationApiError && registerError.status === 422) {
+          const validation = parseValidationErrors(registerError.body);
+          setFieldErrors(validation.fields);
+          setError(
+            validation.general.length > 0
+              ? validation.general.join(" ")
+              : Object.keys(validation.fields).length === 0
+                ? registerError.message
+                : null
+          );
+        } else {
+          setError(
+            registerError instanceof AuthenticationApiError
+              ? registerError.message
+              : "No se pudo completar el registro. Revisa los datos e inténtalo de nuevo."
+          );
+        }
+        return;
+      }
 
-      const { access_token: accessToken } = await loginUser(
-        values.email.trim(),
-        values.password
-      );
-      setAccessToken(accessToken);
-      router.replace("/");
-    } catch (submitError) {
-      if (submitError instanceof AuthenticationApiError && submitError.status === 422) {
-        const validation = parseValidationErrors(submitError.body);
-        setFieldErrors(validation.fields);
-        setError(
-          validation.general.length > 0
-            ? validation.general.join(" ")
-            : Object.keys(validation.fields).length === 0
-              ? submitError.message
-              : null
+      try {
+        const { access_token: accessToken } = await loginUser(
+          values.email.trim(),
+          values.password
         );
-      } else if (accountCreated) {
+        setAccessToken(accessToken);
+        router.replace("/");
+      } catch {
         setError(
           "La cuenta se creó, pero no se pudo iniciar sesión automáticamente. Inicia sesión con tus credenciales."
-        );
-      } else {
-        setError(
-          submitError instanceof Error
-            ? submitError.message
-            : "No se pudo completar el registro. Revisa los datos e inténtalo de nuevo."
         );
       }
     } finally {
