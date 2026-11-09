@@ -10,7 +10,7 @@ import { createCandidate, getCandidates } from "@/src/services/api";
 import type { Candidate, CreateCandidateInput } from "@/src/types";
 import { logout } from "@/src/services/auth-session";
 
-export function TrackFlowDashboard() {
+export function NexovaDashboard() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +96,7 @@ export function TrackFlowDashboard() {
     <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-10 sm:px-8">
       <header className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-          TrackFlow · People Talent
+          Nexova · People Talent
         </p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
           Pipeline de candidaturas

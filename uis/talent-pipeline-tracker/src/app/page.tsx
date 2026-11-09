@@ -1,5 +1,5 @@
-import { TrackFlowDashboard } from "@/src/components/trackflow-dashboard";
+import { NexovaDashboard } from "@/src/components/nexova-dashboard";
 
 export default function Page() {
-  return <TrackFlowDashboard />;
+  return <NexovaDashboard />;
 }

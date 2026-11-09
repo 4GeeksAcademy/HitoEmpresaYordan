@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TrackFlow | Talent Pipeline Tracker",
+  title: "Nexova | Talent Pipeline Tracker",
   description: "Plataforma interna de People Talent para gestionar candidaturas.",
 };
 
