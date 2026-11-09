@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "API de gestión de proveedores de Nexova"
 requires-python = ">=3.11"
 dependencies = [
+    "nexova-shared",
     "fastapi>=0.115",
     "libpass[bcrypt]>=1.9.4",
     "pydantic>=2.7",
@@ -16,6 +17,9 @@ dependencies = [
 
 [project.scripts]
 seed = "routes.seed:main"
+
+[tool.uv.sources]
+nexova-shared = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
