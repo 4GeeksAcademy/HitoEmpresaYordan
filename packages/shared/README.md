@@ -9,6 +9,25 @@ From the repository root, install the API and its shared workspace dependency:
 uv sync --package nexova-suppliers-api
 ```
 
+## Official Incident Catalog
+
+`src/nexova_shared/incident_catalog.json` contains the exact branch names,
+category/status/origin descriptions, transitions, CSV mappings and expected
+seed counts extracted from the root `company-BRIEFIING` document (the actual
+filename in this repository). Both Python validation and TypeScript catalogs
+consume this file; do not maintain a second set of UI labels or mappings.
+
+The briefing supplies display names for branches, but only codes and descriptions
+for categories, statuses and origins. The UI therefore uses those exact codes
+as labels, with the original descriptions as associated text or tooltips.
+Pydantic exposes the descriptions as `x-catalog` field metadata in API schemas.
+
+`EXPECTED_SEED_TOTAL`, `EXPECTED_SEED_STATUS_COUNTS` and
+`EXPECTED_SEED_CATEGORY_COUNTS` describe the expected 96 valid historical rows.
+They are reference values, not records to insert or totals to return from the API.
+The API always aggregates actual stored incidents. The CSV is still required to
+verify the historical totals.
+
 ## API
 
 Import `IncidentCreate` directly as the FastAPI request model. Import `Incident`

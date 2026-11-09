@@ -4,16 +4,17 @@ import { useState, type FormEvent } from "react";
 import { createIncident, incidentErrorMessage, incidentFieldErrors } from "@/src/services/incidents";
 import {
   INCIDENT_BRANCH_LABELS, INCIDENT_CATEGORY_LABELS, INCIDENT_ORIGIN_LABELS, INCIDENT_STATUS_LABELS,
+  INCIDENT_CATEGORY_DESCRIPTIONS, INCIDENT_ORIGIN_DESCRIPTIONS, INCIDENT_STATUS_DESCRIPTIONS,
   type Incident, type IncidentFieldErrors, type IncidentInput,
 } from "@/src/types/incident";
 
 type Draft = Record<keyof IncidentInput, string>;
 const EMPTY_FORM: Draft = { title: "", description: "", category: "", origin: "", branch: "central", status: "open" };
 const SELECTS = {
-  category: { label: "Categoría", options: INCIDENT_CATEGORY_LABELS },
-  origin: { label: "Origen", options: INCIDENT_ORIGIN_LABELS },
-  branch: { label: "Sede", options: INCIDENT_BRANCH_LABELS },
-  status: { label: "Estado", options: INCIDENT_STATUS_LABELS },
+  category: { label: "Categoría", options: INCIDENT_CATEGORY_LABELS, descriptions: INCIDENT_CATEGORY_DESCRIPTIONS },
+  origin: { label: "Origen", options: INCIDENT_ORIGIN_LABELS, descriptions: INCIDENT_ORIGIN_DESCRIPTIONS },
+  branch: { label: "Sede", options: INCIDENT_BRANCH_LABELS, descriptions: {} },
+  status: { label: "Estado", options: INCIDENT_STATUS_LABELS, descriptions: INCIDENT_STATUS_DESCRIPTIONS },
 };
 
 function validate(form: Draft): IncidentFieldErrors {
@@ -95,16 +96,23 @@ export function IncidentForm() {
         <div className="grid gap-5 sm:grid-cols-2">
           {(Object.keys(SELECTS) as (keyof typeof SELECTS)[]).map((field) => {
             const { label, options } = SELECTS[field];
+            const descriptions: Record<string, string> = SELECTS[field].descriptions;
+            const description = descriptions[form[field]];
             const highlighted = field === "branch" && form.origin === "branch";
             return (
               <div key={field} className={highlighted ? "rounded-md bg-teal-50 p-3 ring-2 ring-teal-600" : ""}>
                 <label htmlFor={`incident-${field}`} className={`mb-1.5 block text-sm font-medium ${highlighted ? "text-teal-900" : ""}`}>{label} *</label>
                 <select id={`incident-${field}`} name={field} required value={form[field]}
                   onChange={(event) => setField(field, event.target.value)} className={controlClass(field)}
-                  aria-invalid={Boolean(errors[field])} aria-describedby={errors[field] ? `incident-${field}-error` : undefined}>
+                  aria-invalid={Boolean(errors[field])}
+                  aria-describedby={[
+                    errors[field] ? `incident-${field}-error` : "",
+                    description ? `incident-${field}-description` : "",
+                  ].filter(Boolean).join(" ") || undefined}>
                   <option value="">Selecciona…</option>
                   {Object.entries(options).map(([value, name]) => <option key={value} value={value}>{name}</option>)}
                 </select>
+                {description && <p id={`incident-${field}-description`} className="mt-2 break-words text-xs text-slate-600">{description}</p>}
                 {errors[field] && <p id={`incident-${field}-error`} className="mt-1 text-sm text-red-700">{errors[field]}</p>}
               </div>
             );

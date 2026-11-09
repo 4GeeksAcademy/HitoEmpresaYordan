@@ -49,10 +49,34 @@ pendiente. Los tipos y catálogos TypeScript están en `packages/shared/types/in
 El panel principal incluye un resumen independiente que consulta
 `GET /api/incidents/summary` mediante el mismo proxy autenticado. Muestra el
 total y los conteos por estado, categoría, origen y sede con barras proporcionales;
-cuando no hay incidencias, mantiene todas las categorías visibles con valor cero.
+la fuente «Registros reales» mantiene todas las categorías visibles con valor cero
+cuando la base está vacía. La fuente «Referencia del briefing» muestra los conteos
+históricos esperados, identificados como referencia y no como incidencias importadas.
 Valida la estructura, los conteos y la coherencia de los totales antes de mostrarlos.
 
 La consulta de métricas no bloquea la carga ni los controles de candidaturas.
 Mientras espera muestra carga; tras 5 segundos avisa de la demora y tras 20 segundos
 cancela la petición y ofrece reintento. Los errores de red, API o formato solo
 afectan al resumen. Al abandonar la página, cancela la petición y sus temporizadores.
+
+## Catálogos Oficiales
+
+Los catálogos de incidencias se extraen del documento de empresa cuyo nombre real
+es `company-BRIEFIING`. Se mantienen en
+`packages/shared/src/nexova_shared/incident_catalog.json`, compartido con Python.
+Las sedes muestran exactamente sus nombres oficiales. Categorías, estados y
+orígenes muestran los códigos del briefing, sin traducciones abreviadas inventadas;
+sus descripciones literales aparecen bajo los selectores del registro y como
+información asociada en listado y métricas. `remote` conserva su nombre completo
+y sigue siendo una sede distinta de `central` y `valencia_operations`.
+
+Los conteos esperados del seed (96 incidencias) se muestran en el resumen del
+inicio y de `/incidents` mediante «Referencia del briefing»: 27 `open`, 56
+`resolved`, 13 `discarded`; 49 `technical_failure`, 35 `process_error` y 12
+`client_complaint`. El origen `customer` y la sede `central` suman 96 cada uno,
+según las reglas de importación del briefing; los demás valores quedan en cero.
+La referencia se muestra mientras se consulta la API y cuando no hay registros.
+Con datos reales disponibles, la selección automática usa la API; el usuario
+puede alternar ambas fuentes en cualquier momento. Las cifras de referencia no
+se insertan en la base ni generan filas ficticias en el listado. Los filtros del
+listado se aplican exclusivamente a registros reales, no a estos agregados.

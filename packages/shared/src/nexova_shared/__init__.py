@@ -1,7 +1,15 @@
 from .incidents import (
     BRANCH_LABELS,
+    CATEGORY_DESCRIPTIONS,
     CSV_CATEGORY_MAP,
     CSV_STATUS_MAP,
+    EXPECTED_SEED_CATEGORY_COUNTS,
+    EXPECTED_SEED_STATUS_COUNTS,
+    EXPECTED_SEED_TOTAL,
+    ORIGIN_DESCRIPTIONS,
+    SEED_BRANCH,
+    SEED_ORIGIN,
+    STATUS_DESCRIPTIONS,
     STATUS_TRANSITIONS,
     CsvIncidentImport,
     CsvIncidentRow,
@@ -19,6 +27,8 @@ from .incidents import (
 )
 
 __all__ = [
+    "CATEGORY_DESCRIPTIONS", "EXPECTED_SEED_CATEGORY_COUNTS", "EXPECTED_SEED_STATUS_COUNTS",
+    "EXPECTED_SEED_TOTAL", "ORIGIN_DESCRIPTIONS", "SEED_BRANCH", "SEED_ORIGIN", "STATUS_DESCRIPTIONS",
     "BRANCH_LABELS", "CSV_CATEGORY_MAP", "CSV_STATUS_MAP", "STATUS_TRANSITIONS",
     "CsvIncidentImport", "CsvIncidentRow", "Incident", "IncidentBranch",
     "IncidentCategory", "IncidentCreate", "IncidentOrigin", "IncidentSeed",

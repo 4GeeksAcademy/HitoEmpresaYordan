@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { incidentErrorMessage, listIncidents, updateIncidentStatus } from "@/src/services/incidents";
 import {
   INCIDENT_BRANCH_LABELS, INCIDENT_CATEGORY_LABELS, INCIDENT_ORIGIN_LABELS, INCIDENT_STATUS_LABELS, INCIDENT_TRANSITIONS,
+  INCIDENT_CATEGORY_DESCRIPTIONS, INCIDENT_ORIGIN_DESCRIPTIONS, INCIDENT_STATUS_DESCRIPTIONS,
   type Incident, type IncidentFilters, type IncidentStatus,
 } from "@/src/types/incident";
 
@@ -134,7 +135,7 @@ export function IncidentDirectory() {
                 return (
                   <li key={incident.id} aria-busy={saving} className="grid min-w-0 gap-4 py-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_13rem]">
                     <div className="min-w-0">
-                      <p className="mb-1 text-xs font-medium text-slate-500">#{incident.id} · {INCIDENT_CATEGORY_LABELS[incident.category]}</p>
+                      <p className="mb-1 break-words text-xs font-medium text-slate-500">#{incident.id} · <span title={INCIDENT_CATEGORY_DESCRIPTIONS[incident.category]}>{INCIDENT_CATEGORY_LABELS[incident.category]}</span></p>
                       <h2 className="break-words text-base font-semibold [overflow-wrap:anywhere]">{incident.title}</h2>
                       <details className="mt-2 text-sm text-slate-600">
                         <summary className="w-fit cursor-pointer font-medium text-teal-800">Descripción</summary>
@@ -142,13 +143,14 @@ export function IncidentDirectory() {
                       </details>
                     </div>
                     <dl className="min-w-0 space-y-2 text-sm">
-                      <div><dt className="text-xs text-slate-500">Origen · Sede</dt><dd className="break-words">{INCIDENT_ORIGIN_LABELS[incident.origin]} · {INCIDENT_BRANCH_LABELS[incident.branch]}</dd></div>
+                      <div><dt className="text-xs text-slate-500">Origen · Sede</dt><dd className="break-words"><span title={INCIDENT_ORIGIN_DESCRIPTIONS[incident.origin]}>{INCIDENT_ORIGIN_LABELS[incident.origin]}</span> · {INCIDENT_BRANCH_LABELS[incident.branch]}</dd></div>
                       <div><dt className="text-xs text-slate-500">Creación</dt><dd>{new Date(incident.created_at).toLocaleString("es-ES")}</dd></div>
                       <div><dt className="text-xs text-slate-500">Última actualización</dt><dd>{new Date(incident.updated_at).toLocaleString("es-ES")}</dd></div>
                     </dl>
                     <div className="min-w-0">
                       <label htmlFor={`status-${incident.id}`} className="mb-1.5 block text-sm font-medium">Estado</label>
                       <select id={`status-${incident.id}`} aria-label={`Estado de la incidencia ${incident.id}`}
+                        title={INCIDENT_STATUS_DESCRIPTIONS[incident.status]}
                         value={incident.status} disabled={saving || transitions.length === 0}
                         aria-describedby={mutationErrors[incident.id] ? `status-error-${incident.id}` : undefined}
                         onChange={(event) => void changeStatus(incident, event.target.value as IncidentStatus)}
@@ -156,6 +158,7 @@ export function IncidentDirectory() {
                         <option value={incident.status}>{INCIDENT_STATUS_LABELS[incident.status]}</option>
                         {transitions.map((status) => <option key={status} value={status}>{INCIDENT_STATUS_LABELS[status]}</option>)}
                       </select>
+                      <p className="mt-2 break-words text-xs text-slate-600">{INCIDENT_STATUS_DESCRIPTIONS[incident.status]}</p>
                       {saving && <p role="status" className="mt-2 text-sm text-teal-800">Guardando…</p>}
                       {!saving && transitions.length === 0 && <p className="mt-2 text-xs text-slate-500">Estado final</p>}
                     </div>

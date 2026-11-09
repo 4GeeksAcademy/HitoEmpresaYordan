@@ -1,13 +1,17 @@
 import csv
+import json
 import logging
 from collections.abc import Iterator, Mapping
 from datetime import datetime, timezone
 from enum import Enum
+from importlib.resources import files
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+
+_CATALOG = json.loads(files(__package__).joinpath("incident_catalog.json").read_text(encoding="utf-8"))
 
 
 class IncidentStatus(str, Enum):
@@ -41,32 +45,32 @@ class IncidentOrigin(str, Enum):
     INTERNAL = "internal"
 
 
-BRANCH_LABELS = MappingProxyType({
-    IncidentBranch.CENTRAL: "Central — Sede Valencia",
-    IncidentBranch.VALENCIA_OPERATIONS: "Valencia — Operaciones",
-    IncidentBranch.MIAMI_OFFICE: "Miami Office",
-    IncidentBranch.REMOTE: "Remoto (empleado sin sede fija)",
-})
+BRANCH_LABELS = MappingProxyType({IncidentBranch(key): value for key, value in _CATALOG["branches"].items()})
+STATUS_DESCRIPTIONS = MappingProxyType({IncidentStatus(key): value for key, value in _CATALOG["statuses"].items()})
+CATEGORY_DESCRIPTIONS = MappingProxyType({IncidentCategory(key): value for key, value in _CATALOG["categories"].items()})
+ORIGIN_DESCRIPTIONS = MappingProxyType({IncidentOrigin(key): value for key, value in _CATALOG["origins"].items()})
 
 CSV_STATUS_MAP = MappingProxyType({
-    "OPEN": IncidentStatus.OPEN,
-    "CLOSED": IncidentStatus.RESOLVED,
-    "DISCARDED": IncidentStatus.DISCARDED,
+    key: IncidentStatus(value) for key, value in _CATALOG["csv_status_map"].items()
 })
 
 CSV_CATEGORY_MAP = MappingProxyType({
-    "TECHNICAL": IncidentCategory.TECHNICAL_FAILURE,
-    "BILLING": IncidentCategory.PROCESS_ERROR,
-    "ACCESS": IncidentCategory.TECHNICAL_FAILURE,
-    "HR_QUERY": IncidentCategory.PROCESS_ERROR,
-    "COMPLAINT": IncidentCategory.CLIENT_COMPLAINT,
+    key: IncidentCategory(value) for key, value in _CATALOG["csv_category_map"].items()
 })
 
 STATUS_TRANSITIONS = MappingProxyType({
-    IncidentStatus.OPEN: frozenset({IncidentStatus.IN_PROGRESS, IncidentStatus.DISCARDED}),
-    IncidentStatus.IN_PROGRESS: frozenset({IncidentStatus.RESOLVED, IncidentStatus.DISCARDED}),
-    IncidentStatus.RESOLVED: frozenset(),
-    IncidentStatus.DISCARDED: frozenset(),
+    IncidentStatus(key): frozenset(IncidentStatus(target) for target in values)
+    for key, values in _CATALOG["transitions"].items()
+})
+
+SEED_ORIGIN = IncidentOrigin(_CATALOG["seed"]["origin"])
+SEED_BRANCH = IncidentBranch(_CATALOG["seed"]["branch"])
+EXPECTED_SEED_TOTAL = _CATALOG["seed"]["expected_total"]
+EXPECTED_SEED_STATUS_COUNTS = MappingProxyType({
+    value: _CATALOG["seed"]["expected_by_status"].get(value.value, 0) for value in IncidentStatus
+})
+EXPECTED_SEED_CATEGORY_COUNTS = MappingProxyType({
+    value: _CATALOG["seed"]["expected_by_category"].get(value.value, 0) for value in IncidentCategory
 })
 
 
@@ -82,10 +86,10 @@ class IncidentCreate(BaseModel):
 
     title: str = Field(min_length=1, max_length=120)
     description: str = Field(min_length=1)
-    category: IncidentCategory
-    origin: IncidentOrigin
-    branch: IncidentBranch = IncidentBranch.CENTRAL
-    status: IncidentStatus = IncidentStatus.OPEN
+    category: IncidentCategory = Field(json_schema_extra={"x-catalog": dict(CATEGORY_DESCRIPTIONS)})
+    origin: IncidentOrigin = Field(json_schema_extra={"x-catalog": dict(ORIGIN_DESCRIPTIONS)})
+    branch: IncidentBranch = Field(IncidentBranch.CENTRAL, json_schema_extra={"x-catalog": dict(BRANCH_LABELS)})
+    status: IncidentStatus = Field(IncidentStatus.OPEN, json_schema_extra={"x-catalog": dict(STATUS_DESCRIPTIONS)})
 
     @field_validator("title")
     @classmethod
@@ -185,8 +189,8 @@ def transform_csv_incident(data: Mapping[str, Any]) -> CsvIncidentImport:
         description=row.description,
         category=CSV_CATEGORY_MAP[row.category],
         status=CSV_STATUS_MAP[row.status],
-        origin=IncidentOrigin.CUSTOMER,
-        branch=IncidentBranch.CENTRAL,
+        origin=SEED_ORIGIN,
+        branch=SEED_BRANCH,
         created_at=created_at,
         updated_at=created_at,
     )
