@@ -104,7 +104,19 @@ export function TrackFlowDashboard() {
         <p className="mt-3 max-w-3xl text-sm text-slate-600">
           Visualiza el estado operativo del reclutamiento, filtra por etapa y gestiona nuevas candidaturas desde un solo panel.
         </p>
-        <div className="mt-5 flex flex-wrap gap-3">
+        <nav aria-label="Menú principal" className="mt-5 flex flex-wrap gap-3">
+          <Link
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            href="/incidents"
+          >
+            Incidencias
+          </Link>
+          <Link
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            href="/incidents/new"
+          >
+            Registrar incidencia
+          </Link>
           <Link
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             href="/account/profile"
@@ -118,7 +130,7 @@ export function TrackFlowDashboard() {
           >
             Cerrar sesión
           </button>
-        </div>
+        </nav>
       </header>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">

@@ -54,8 +54,8 @@ async function parseResponseBody(response: Response): Promise<unknown> {
   return text || null;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
+export async function request<T>(path: string, init?: RequestInit, baseUrl = process.env.NEXT_PUBLIC_API_URL): Promise<T> {
+  const apiBaseUrl = baseUrl?.replace(/\/+$/, "");
 
   if (!apiBaseUrl) {
     throw new Error("Falta configurar NEXT_PUBLIC_API_URL");
