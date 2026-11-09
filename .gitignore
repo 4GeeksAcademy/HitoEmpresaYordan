@@ -10,3 +10,7 @@ services/api/data/
 # Node / Next.js
 node_modules/
 .next/
+dist/
+build/
+*.node
+.DS_Store

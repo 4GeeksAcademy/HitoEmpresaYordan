@@ -4,6 +4,7 @@
 
 - El repositorio es un monorepo con aplicaciones y documentación distribuidas en `uis/`, `services/`, `shared/`, `packages/`, `agents/`, `skills/` y otras carpetas de plantilla. No hay un `package.json` ni un runner de workspace en la raíz, según la documentación del repositorio.
 - La web pública principal se desarrolla en `uis/website/`, una app Next.js 16.3.8 con App Router y su propio `package.json`; la ruta `/` es una página corporativa y su calculadora de tarifas es interactiva en cliente. El HTML de raíz (`index.html` y `application.html`) sigue existiendo como entrega anterior y no es fuente de verdad de negocio.
+- El website conserva Next.js 16.3.8 y añade Tailwind CSS 4 con `@tailwindcss/postcss`; `tsconfig.json` resuelve alias `@/` tanto desde `src/` como desde la raíz de la aplicación para los componentes existentes.
 - `uis/backoffice/` es una aplicación estática independiente de HTML, CSS y JavaScript. Presenta condiciones operativas y conserva la carga, el análisis y la exportación de CSV.
 - `uis/talent-pipeline-tracker/` es una aplicación Next.js con App Router: Next.js 16.2.10, React 19.2.4, TypeScript 5, Tailwind CSS 4 y ESLint 9. Sus scripts locales son `dev`, `build`, `start` y `lint`.
 - `services/api/` contiene una API FastAPI para analizar CSV de incidentes y exportar el último resultado. Las dependencias declaradas son FastAPI, `python-multipart` y Uvicorn; la lógica de análisis está en `shared/incident_analysis.py`.

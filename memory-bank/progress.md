@@ -10,6 +10,7 @@ Actualizado: 2026-11-09.
 - `services/api/` ofrece análisis y exportación de CSV de incidentes mediante `POST /api/incidents/analyze` y `GET /api/incidents/results/export`. La lógica compartida está en `shared/incident_analysis.py`; el resultado más reciente se conserva en memoria del proceso, no en almacenamiento persistente.
 - `docs/ARCHITECTURE_PROPOSAL.md` propone una arquitectura de backend modular monolítica. Es orientación, no una descripción de implementación concluida.
 - La documentación de raíz todavía conserva referencias a la plantilla original y no está completamente alineada con Nexova.
+- La integración de Hito 4 añade Tailwind CSS 4 y los componentes `AboutSection`, `ContactSection`, `FooterSection`, `HeroSection` y `ServicesSection`. La portada mantiene el contenido comercial y la calculadora vigentes; revisar las afirmaciones no confirmadas y el destino del formulario antes de exponer esas secciones.
 
 ## Autenticación: estado comprobable en código
 
