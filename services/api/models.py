@@ -172,6 +172,12 @@ class UserRole(str, Enum):
     USER = "user"
 
 
+def _validate_password_bytes(value: str) -> str:
+    if len(value.encode("utf-8")) > 72:
+        raise ValueError("La contrasena no puede superar 72 bytes")
+    return value
+
+
 class UserCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -181,6 +187,11 @@ class UserCreate(BaseModel):
     phone: Optional[str] = Field(None, max_length=50)
     address: Optional[str] = Field(None, max_length=500)
 
+    @field_validator("password")
+    @classmethod
+    def validate_password_bytes(cls, value: str) -> str:
+        return _validate_password_bytes(value)
+
 
 class UserUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -188,6 +199,11 @@ class UserUpdate(BaseModel):
     email: Optional[str] = Field(None, max_length=254, pattern=EMAIL_PATTERN)
     password: Optional[str] = Field(None, min_length=8)
     role: Optional[UserRole] = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_bytes(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_password_bytes(value) if value is not None else None
 
     @model_validator(mode="after")
     def reject_explicit_nulls(self):
@@ -264,9 +280,7 @@ class NewPasswordRequest(BaseModel):
     @field_validator("new_password")
     @classmethod
     def validate_password_bytes(cls, value: str) -> str:
-        if len(value.encode("utf-8")) > 72:
-            raise ValueError("La contrasena no puede superar 72 bytes")
-        return value
+        return _validate_password_bytes(value)
 
 
 class ResetPasswordRequest(NewPasswordRequest):

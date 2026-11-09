@@ -1,11 +1,7 @@
-import logging
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-from fastapi.routing import APIRoute
+from fastapi import APIRouter, Depends, HTTPException, Path
 from nexova_shared import (
     Incident,
     IncidentBranch,
@@ -23,40 +19,9 @@ from auth import get_current_user
 from database import db_lock, incidents_table
 
 
-logger = logging.getLogger(__name__)
-
-
-class IncidentRoute(APIRoute):
-    def get_route_handler(self):
-        handler = super().get_route_handler()
-
-        async def handle(request: Request):
-            try:
-                return await handler(request)
-            except RequestValidationError as error:
-                return JSONResponse(status_code=400, content={
-                    "detail": "Datos de incidencia no validos",
-                    "errors": [
-                        {"field": ".".join(map(str, item["loc"])),
-                         "message": item["msg"], "type": item["type"]}
-                        for item in error.errors()
-                    ],
-                })
-            except HTTPException:
-                raise
-            except Exception:
-                logger.exception("Error al gestionar incidencias")
-                return JSONResponse(status_code=500, content={
-                    "detail": "No se pudo completar la operacion de incidencias",
-                })
-
-        return handle
-
-
 router = APIRouter(
     prefix="/api/incidents",
     tags=["incidents"],
-    route_class=IncidentRoute,
     dependencies=[Depends(get_current_user)],
 )
 
@@ -151,7 +116,10 @@ def update_incident_status(incident_id: IncidentId, payload: IncidentStatusUpdat
         try:
             target = validate_status_transition(incident.status, payload.status)
         except ValueError as error:
-            raise HTTPException(status_code=400, detail=str(error)) from error
+            raise HTTPException(
+                status_code=400,
+                detail="No se puede cambiar al estado indicado desde el estado actual.",
+            ) from error
         updated = incident.model_copy(update={
             "status": target,
             "updated_at": datetime.now(timezone.utc),

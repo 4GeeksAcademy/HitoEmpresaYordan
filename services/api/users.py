@@ -49,7 +49,10 @@ def post_user(payload: UserCreate) -> UserRead:
     try:
         return public_user(create_user(payload))
     except ValueError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ya existe una cuenta con ese correo electronico",
+        ) from error
 
 
 @router.get("", response_model=list[UserRead])
@@ -80,7 +83,10 @@ def put_user(
     try:
         user = update_user(user_id, payload)
     except ValueError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ya existe una cuenta con ese correo electronico",
+        ) from error
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
     return public_user(user)

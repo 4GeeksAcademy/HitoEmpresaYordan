@@ -24,7 +24,7 @@ load_dotenv(Path(__file__).with_name(".env"))
 
 SECRET_KEY = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY")
 if not SECRET_KEY:
-    raise RuntimeError("JWT_SECRET debe configurarse en el entorno o en services/api/.env")
+    raise RuntimeError("JWT_SECRET debe configurarse en el entorno")
 
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
