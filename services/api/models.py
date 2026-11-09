@@ -107,6 +107,58 @@ class SupplierStatusUpdate(BaseModel):
     status: SupplierStatus
 
 
+class CandidateRecordFields(BaseModel):
+    full_name: str = Field(..., min_length=1, max_length=200)
+    email: str = Field(..., max_length=254, pattern=EMAIL_PATTERN)
+    phone: str = Field(..., max_length=50)
+    position: str = Field(..., min_length=1, max_length=200)
+    linkedin_url: str = Field("", max_length=2048)
+    cv_url: str = Field("", max_length=2048)
+    experience_years: float = Field(0, ge=0)
+    status: str = Field("pending", min_length=1, max_length=50)
+    stage: str = Field("screening", min_length=1, max_length=50)
+    applied_at: datetime = Field(default_factory=utc_now)
+
+
+class CandidateRecordCreate(CandidateRecordFields):
+    model_config = ConfigDict(extra="forbid")
+
+
+class CandidateRecord(CandidateRecordFields):
+    id: int
+
+
+class CandidateRecordPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Optional[str] = Field(None, min_length=1, max_length=50)
+    stage: Optional[str] = Field(None, min_length=1, max_length=50)
+
+    @model_validator(mode="after")
+    def require_changes(self):
+        if not self.model_fields_set or any(
+            getattr(self, field) is None for field in self.model_fields_set
+        ):
+            raise ValueError("Debe enviarse status o stage")
+        return self
+
+
+class CandidateNoteCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    content: str = Field(..., min_length=1, max_length=10000)
+    created_by: Optional[str] = Field(None, max_length=254)
+
+
+class CandidateNote(BaseModel):
+    id: int
+    record_id: int
+    content: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    created_by: Optional[str] = None
+
+
 class Supplier(SupplierBase):
     model_config = ConfigDict(use_enum_values=True)
 

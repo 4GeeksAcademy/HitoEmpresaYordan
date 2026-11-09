@@ -48,4 +48,3 @@ Actualizado: 2026-11-09.
 7. Antes de organizar commits, revisar el estado de trabajo y seleccionar explícitamente los archivos que correspondan.
 
 Mantener esta página alineada con el código y las validaciones ejecutadas. No registrar secretos ni datos personales de clientes o candidatos.
-q
