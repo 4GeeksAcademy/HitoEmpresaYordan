@@ -112,8 +112,8 @@ class CandidateRecordFields(BaseModel):
     email: str = Field(..., max_length=254, pattern=EMAIL_PATTERN)
     phone: str = Field(..., max_length=50)
     position: str = Field(..., min_length=1, max_length=200)
-    linkedin_url: str = Field("", max_length=2048)
-    cv_url: str = Field("", max_length=2048)
+    linkedin_url: Optional[str] = Field("", max_length=2048)
+    cv_url: Optional[str] = Field("", max_length=2048)
     experience_years: float = Field(0, ge=0)
     status: str = Field("pending", min_length=1, max_length=50)
     stage: str = Field("screening", min_length=1, max_length=50)
@@ -125,7 +125,10 @@ class CandidateRecordCreate(CandidateRecordFields):
 
 
 class CandidateRecord(CandidateRecordFields):
-    id: int
+    model_config = ConfigDict(extra="allow")
+
+    id: str | int
+    external_id: Optional[str] = None
 
 
 class CandidateRecordPatch(BaseModel):
@@ -151,12 +154,15 @@ class CandidateNoteCreate(BaseModel):
 
 
 class CandidateNote(BaseModel):
-    id: int
-    record_id: int
+    model_config = ConfigDict(extra="allow")
+
+    id: str | int
+    record_id: str | int
     content: str
     created_at: datetime
     updated_at: Optional[datetime] = None
     created_by: Optional[str] = None
+    external_id: Optional[str] = None
 
 
 class Supplier(SupplierBase):

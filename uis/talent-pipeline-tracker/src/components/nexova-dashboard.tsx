@@ -80,6 +80,13 @@ export function NexovaDashboard() {
     });
   }, [candidates, query, stage, status]);
 
+  const candidateMetrics = [
+    { label: "Total", value: candidates.length },
+    { label: "En proceso", value: candidates.filter((candidate) => candidate.estado === "en-proceso").length },
+    { label: "Contratadas", value: candidates.filter((candidate) => candidate.estado === "contratado").length },
+    { label: "Rechazadas", value: candidates.filter((candidate) => candidate.estado === "rechazado").length },
+  ];
+
   const handleCreateCandidate = useCallback(
     async (payload: CreateCandidateInput) => {
       const created = await createCandidate(payload);
@@ -135,6 +142,31 @@ export function NexovaDashboard() {
       </header>
 
       <IncidentSummaryPanel />
+
+      <section aria-labelledby="candidate-metrics-title" aria-busy={isLoading} className="mt-6 border-y border-slate-300 py-5">
+        <h2 id="candidate-metrics-title" className="text-lg font-semibold text-slate-900">
+          Métricas de candidaturas
+        </h2>
+        {isLoading ? (
+          <p role="status" className="mt-3 text-sm text-slate-600">Cargando métricas…</p>
+        ) : error ? (
+          <div role="alert" className="mt-3 flex flex-wrap items-center gap-3 text-sm text-rose-800">
+            <p>No se pudieron cargar las métricas de candidaturas.</p>
+            <button type="button" onClick={() => void loadCandidates()} className="font-semibold underline">
+              Reintentar
+            </button>
+          </div>
+        ) : (
+          <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {candidateMetrics.map(({ label, value }) => (
+              <div key={label}>
+                <dt className="text-sm text-slate-600">{label}</dt>
+                <dd className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </section>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-4">

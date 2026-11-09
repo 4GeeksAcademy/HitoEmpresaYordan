@@ -23,14 +23,15 @@ En otra terminal, inicia el frontend:
 
 ```sh
 cd uis/talent-pipeline-tracker
-NEXT_PUBLIC_API_URL=/backend npm run dev -- --hostname 0.0.0.0 --port 3000
+npm run dev -- --hostname 0.0.0.0 --port 3000
 ```
 
 Abre `http://localhost:3000` e inicia sesión con una cuenta del backend local.
-Los tokens del servicio remoto de candidatos no deben utilizarse para autenticar
-peticiones contra otra API. `NEXT_PUBLIC_API_URL=/backend` permite que el login
-y los demás consumidores usen el mismo backend durante esta sesión de desarrollo;
-no modifica la configuración remota existente en los archivos de entorno.
+El Tracker usa el proxy local `/backend` tanto para autenticación como para
+candidaturas; los tokens locales no se envían a la API de 4Geeks. La importación
+inicial desde 4Geeks se realiza una sola vez con
+`scripts/import_4geeks_candidates.py`; después, el backend local es la fuente
+persistente y el Tracker no necesita que la API externa esté disponible.
 
 Las peticiones de incidencias usan siempre `/backend/api/incidents`, con el token
 de la sesión existente. El proxy Next.js apunta por defecto a

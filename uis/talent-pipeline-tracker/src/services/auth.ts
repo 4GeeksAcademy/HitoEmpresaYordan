@@ -44,13 +44,7 @@ export class AuthenticationApiError extends Error {
 }
 
 function getApiBaseUrl(): string {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_AUTH_API_URL?.replace(/\/$/, "");
-
-  if (!apiBaseUrl) {
-    throw new AuthenticationApiError("No se pudo conectar con el servicio. Inténtalo más tarde.", 0, null);
-  }
-
-  return apiBaseUrl;
+  return "/backend";
 }
 
 async function readResponseBody(response: Response): Promise<unknown> {

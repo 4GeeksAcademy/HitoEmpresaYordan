@@ -8,6 +8,7 @@ import type {
   PatchCandidateInput,
   UpdateCandidateInput,
 } from "@/src/types";
+import { getAuthorizationHeader } from "@/src/services/auth-session";
 
 interface ApiRecord {
   id: string | number;
@@ -66,20 +67,20 @@ async function parseResponseBody(response: Response): Promise<unknown> {
   return text || null;
 }
 
-export async function request<T>(path: string, init?: RequestInit, baseUrl = process.env.NEXT_PUBLIC_API_URL): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit, baseUrl = "/backend"): Promise<T> {
   const apiBaseUrl = baseUrl?.replace(/\/+$/, "");
-
-  if (!apiBaseUrl) {
-    throw new ApiError("No se pudo conectar con el servicio. Inténtalo de nuevo más tarde.", 0, null);
-  }
 
   let response: Response;
   try {
+    const headers = new Headers(init?.headers);
+    for (const [name, value] of Object.entries(getAuthorizationHeader())) {
+      headers.set(name, value);
+    }
     response = await fetch(`${apiBaseUrl}${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",
-        ...Object.fromEntries(new Headers(init?.headers).entries()),
+        ...Object.fromEntries(headers.entries()),
       },
       cache: "no-store",
     });
