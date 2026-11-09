@@ -2,6 +2,7 @@ export type CandidateStatus = "aplicado" | "en-proceso" | "contratado" | "rechaz
 
 export type CandidateStage =
   | "screening"
+  | "revision"
   | "entrevista-rrhh"
   | "entrevista-tecnica"
   | "entrevista-final"

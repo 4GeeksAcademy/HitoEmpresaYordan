@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CandidateList } from "@/src/components/candidate-list";
 import { FiltersBar } from "@/src/components/filters-bar";
 import { NewCandidateForm } from "@/src/components/new-candidate-form";
 import { createCandidate, getCandidates } from "@/src/services/api";
 import type { Candidate, CreateCandidateInput } from "@/src/types";
+import { logout } from "@/src/services/auth-session";
 
 export function TrackFlowDashboard() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -102,6 +104,21 @@ export function TrackFlowDashboard() {
         <p className="mt-3 max-w-3xl text-sm text-slate-600">
           Visualiza el estado operativo del reclutamiento, filtra por etapa y gestiona nuevas candidaturas desde un solo panel.
         </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            href="/account/profile"
+          >
+            Mi perfil
+          </Link>
+          <button
+            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+            onClick={logout}
+            type="button"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </header>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">

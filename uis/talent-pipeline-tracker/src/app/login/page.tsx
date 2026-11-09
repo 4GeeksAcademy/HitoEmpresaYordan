@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { loginUser } from "@/src/services/auth";
+import { setAccessToken } from "@/src/services/auth-session";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function LoginPage() {
 
     try {
       const { access_token: accessToken } = await loginUser(email.trim(), password);
-      localStorage.setItem("access_token", accessToken);
+      setAccessToken(accessToken);
       router.replace("/");
     } catch (submitError) {
       setError(

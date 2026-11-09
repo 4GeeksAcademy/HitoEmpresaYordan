@@ -7,9 +7,8 @@ import {
   getCurrentAccount,
   updateAccountProfile,
 } from "@/src/services/auth";
-import type { UpdateAccountProfileInput } from "@/src/services/auth";
 
-const emptyProfile: UpdateAccountProfileInput = {
+const emptyProfile = {
   name: "",
   phone: "",
   address: "",

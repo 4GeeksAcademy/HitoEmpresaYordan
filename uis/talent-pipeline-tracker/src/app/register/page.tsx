@@ -9,6 +9,7 @@ import {
   loginUser,
   registerUser,
 } from "@/src/services/auth";
+import { setAccessToken } from "@/src/services/auth-session";
 
 type RegisterField = "email" | "password" | "name" | "phone" | "address";
 type FieldErrors = Partial<Record<RegisterField, string[]>>;
@@ -92,7 +93,7 @@ export default function RegisterPage() {
         values.email.trim(),
         values.password
       );
-      localStorage.setItem("access_token", accessToken);
+      setAccessToken(accessToken);
       router.replace("/");
     } catch (submitError) {
       if (submitError instanceof AuthenticationApiError && submitError.status === 422) {

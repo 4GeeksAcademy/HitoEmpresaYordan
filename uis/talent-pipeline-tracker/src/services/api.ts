@@ -13,7 +13,7 @@ interface ApiRecord {
   id: string | number;
   full_name: string;
   email: string;
-  phone: string;
+  phone?: string;
   position: string;
   linkedin_url?: string;
   cv_url?: string;
@@ -45,36 +45,36 @@ export class ApiError extends Error {
 }
 
 async function parseResponseBody(response: Response): Promise<unknown> {
-  const contentType = response.headers.get("content-type") ?? "";
+  if (response.status === 204) return null;
 
-  if (contentType.includes("application/json")) {
-    return await response.json();
-  }
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) return response.json();
 
   const text = await response.text();
   return text || null;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
 
   if (!apiBaseUrl) {
-    throw new Error("Missing NEXT_PUBLIC_API_URL environment variable");
+    throw new Error("Falta configurar NEXT_PUBLIC_API_URL");
   }
 
   const response = await fetch(`${apiBaseUrl}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
+      ...Object.fromEntries(new Headers(init?.headers).entries()),
     },
+    cache: "no-store",
   });
 
   const body = await parseResponseBody(response);
 
   if (!response.ok) {
     throw new ApiError(
-      `Request failed with status ${response.status}`,
+      `Error en la API: ${response.status}`,
       response.status,
       body
     );
@@ -85,55 +85,55 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 function readDataField(body: unknown): unknown {
   if (!body || typeof body !== "object") return body;
-
   const container = body as Record<string, unknown>;
   return container.data ?? body;
 }
 
-function mapStatusFromApi(value: string | undefined): CandidateStatus {
-  if (!value) return "aplicado";
-
-  const normalized = value.toLowerCase();
-
-  if (["applied", "pending", "new"].includes(normalized)) return "aplicado";
-  if (["in_progress", "in-progress", "interview", "review"].includes(normalized)) return "en-proceso";
-  if (["hired", "accepted", "closed_won"].includes(normalized)) return "contratado";
-  if (["rejected", "discarded", "closed_lost"].includes(normalized)) return "rechazado";
-
-  return value;
+function mapStatusFromApi(value?: string): CandidateStatus {
+  switch (value?.toLowerCase()) {
+    case "received":
+    case "pending":
+      return "aplicado";
+    case "in_progress":
+      return "en-proceso";
+    case "selected":
+      return "contratado";
+    case "discarded":
+      return "rechazado";
+    default:
+      return "aplicado";
+  }
 }
 
 function mapStatusToApi(value: CandidateStatus): string {
-  if (value === "aplicado") return "pending";
-  if (value === "en-proceso") return "in_progress";
-  if (value === "contratado") return "hired";
-  if (value === "rechazado") return "rejected";
-  return value;
+  switch (value) {
+    case "aplicado": return "received";
+    case "en-proceso": return "in_progress";
+    case "contratado": return "selected";
+    case "rechazado": return "discarded";
+  }
 }
 
-function mapStageFromApi(value: string | undefined): CandidateStage {
-  if (!value) return "screening";
-
-  const normalized = value.toLowerCase();
-
-  if (["review", "screening"].includes(normalized)) return "screening";
-  if (["hr_interview", "interview_rrhh", "entrevista-rrhh"].includes(normalized)) return "entrevista-rrhh";
-  if (["tech_interview", "entrevista-tecnica"].includes(normalized)) return "entrevista-tecnica";
-  if (["final_interview", "entrevista-final"].includes(normalized)) return "entrevista-final";
-  if (["offer", "oferta"].includes(normalized)) return "oferta";
-  if (["hired"].includes(normalized)) return "hired";
-  if (["discarded", "descartado"].includes(normalized)) return "descartado";
-
-  return value;
+function mapStageFromApi(value?: string): CandidateStage {
+  switch (value?.toLowerCase()) {
+    case "pending": return "screening";
+    case "review": return "revision";
+    case "personal_interview": return "entrevista-rrhh";
+    case "technical_interview": return "entrevista-tecnica";
+    case "offer_presented": return "oferta";
+    default: return "screening";
+  }
 }
 
 function mapStageToApi(value: CandidateStage): string {
-  if (value === "entrevista-rrhh") return "hr_interview";
-  if (value === "entrevista-tecnica") return "tech_interview";
-  if (value === "entrevista-final") return "final_interview";
-  if (value === "oferta") return "offer";
-  if (value === "descartado") return "discarded";
-  return value;
+  switch (value) {
+    case "screening": return "pending";
+    case "revision": return "review";
+    case "entrevista-rrhh": return "personal_interview";
+    case "entrevista-tecnica": return "technical_interview";
+    case "oferta": return "offer_presented";
+    default: return "pending";
+  }
 }
 
 function mapApiRecordToCandidate(record: ApiRecord): Candidate {
@@ -141,7 +141,7 @@ function mapApiRecordToCandidate(record: ApiRecord): Candidate {
     id: record.id,
     nombre: record.full_name,
     email: record.email,
-    telefono: record.phone,
+    telefono: record.phone ?? "",
     puesto: record.position,
     linkedinUrl: record.linkedin_url ?? "",
     cvUrl: record.cv_url ?? "",
@@ -152,18 +152,16 @@ function mapApiRecordToCandidate(record: ApiRecord): Candidate {
   };
 }
 
+// RecordCreate no admite status, stage ni applied_at.
 function mapCandidateInputToApi(payload: CreateCandidateInput | UpdateCandidateInput) {
   return {
     full_name: payload.nombre,
     email: payload.email,
     phone: payload.telefono,
     position: payload.puesto,
-    linkedin_url: payload.linkedinUrl,
-    cv_url: payload.cvUrl,
+    linkedin_url: payload.linkedinUrl || null,
+    cv_url: payload.cvUrl || null,
     experience_years: payload.aniosExperiencia,
-    status: mapStatusToApi(payload.estado),
-    stage: mapStageToApi(payload.etapa),
-    applied_at: payload.fechaAplicacion,
   };
 }
 
@@ -179,32 +177,29 @@ function mapApiNoteToNote(note: ApiNote, candidateId: string | number): Note {
 }
 
 export async function getCandidates(): Promise<Candidate[]> {
-  const body = await request<unknown>("/records", { method: "GET" });
+  const body = await request<unknown>("/records?page=1&limit=200");
   const data = readDataField(body);
 
-  if (!Array.isArray(data)) {
-    return [];
-  }
-
+  if (!Array.isArray(data)) return [];
   return data.map((record) => mapApiRecordToCandidate(record as ApiRecord));
 }
 
 export async function getCandidateById(id: number | string): Promise<Candidate> {
-  const body = await request<unknown>(`/records/${id}`, { method: "GET" });
-  const data = readDataField(body) as ApiRecord;
-  return mapApiRecordToCandidate(data);
+  const body = await request<unknown>(`/records/${id}`);
+  return mapApiRecordToCandidate(readDataField(body) as ApiRecord);
 }
 
-export async function createCandidate(
-  payload: CreateCandidateInput
-): Promise<Candidate> {
+export async function createCandidate(payload: CreateCandidateInput): Promise<Candidate> {
   const body = await request<unknown>("/records", {
     method: "POST",
     body: JSON.stringify(mapCandidateInputToApi(payload)),
   });
 
-  const data = readDataField(body) as ApiRecord;
-  return mapApiRecordToCandidate(data);
+  const created = mapApiRecordToCandidate(readDataField(body) as ApiRecord);
+  return patchCandidate(created.id, {
+    estado: payload.estado,
+    etapa: payload.etapa,
+  });
 }
 
 export async function updateCandidate(
@@ -216,8 +211,11 @@ export async function updateCandidate(
     body: JSON.stringify(mapCandidateInputToApi(payload)),
   });
 
-  const data = readDataField(body) as ApiRecord;
-  return mapApiRecordToCandidate(data);
+  const updated = mapApiRecordToCandidate(readDataField(body) as ApiRecord);
+  return patchCandidate(id, {
+    estado: payload.estado,
+    etapa: payload.etapa,
+  });
 }
 
 export async function patchCandidate(
@@ -232,18 +230,14 @@ export async function patchCandidate(
     }),
   });
 
-  const data = readDataField(body) as ApiRecord;
-  return mapApiRecordToCandidate(data);
+  return mapApiRecordToCandidate(readDataField(body) as ApiRecord);
 }
 
 export async function getCandidateNotes(id: number | string): Promise<Note[]> {
-  const body = await request<unknown>(`/records/${id}/notes`, { method: "GET" });
+  const body = await request<unknown>(`/records/${id}/notes`);
   const data = readDataField(body);
 
-  if (!Array.isArray(data)) {
-    return [];
-  }
-
+  if (!Array.isArray(data)) return [];
   return data.map((note) => mapApiNoteToNote(note as ApiNote, id));
 }
 
@@ -253,16 +247,17 @@ export async function addCandidateNote(
 ): Promise<Note> {
   const body = await request<unknown>(`/records/${id}/notes`, {
     method: "POST",
-    body: JSON.stringify({ content: payload.texto, created_by: payload.createdBy }),
+    body: JSON.stringify({ content: payload.texto }),
   });
 
-  const data = readDataField(body) as ApiNote;
-  return mapApiNoteToNote(data, id);
+  return mapApiNoteToNote(readDataField(body) as ApiNote, id);
 }
 
 export async function deleteCandidateNote(
   id: number | string,
   noteId: number | string
 ): Promise<void> {
-  await request<null>(`/records/${id}/notes/${noteId}`, { method: "DELETE" });
+  await request<null>(`/records/${id}/notes/${noteId}`, {
+    method: "DELETE",
+  });
 }

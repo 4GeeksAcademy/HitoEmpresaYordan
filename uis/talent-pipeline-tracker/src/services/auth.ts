@@ -1,3 +1,5 @@
+import { getAuthorizationHeader, logout } from "@/src/services/auth-session";
+
 export interface RegisterUserInput {
   email: string;
   password: string;
@@ -42,7 +44,7 @@ export class AuthenticationApiError extends Error {
 }
 
 function getApiBaseUrl(): string {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+  const apiBaseUrl = process.env.NEXT_PUBLIC_AUTH_API_URL?.replace(/\/$/, "");
 
   if (!apiBaseUrl) {
     throw new Error("Falta configurar NEXT_PUBLIC_API_URL para conectar con la API.");
@@ -75,11 +77,23 @@ function getResponseMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 
-async function request<T>(path: string, init: RequestInit): Promise<T> {
-  const response = await fetch(`${getApiBaseUrl()}${path}`, init);
+async function request<T>(
+  path: string,
+  init: RequestInit,
+  requiresAuth = false
+): Promise<T> {
+  const headers = new Headers(init.headers);
+  if (requiresAuth) {
+    for (const [name, value] of Object.entries(getAuthorizationHeader())) {
+      headers.set(name, value);
+    }
+  }
+
+  const response = await fetch(`${getApiBaseUrl()}${path}`, { ...init, headers });
   const body = await readResponseBody(response);
 
   if (!response.ok) {
+    if (requiresAuth && response.status === 401) logout();
     throw new AuthenticationApiError(
       getResponseMessage(body, "No se pudo completar la solicitud."),
       response.status,
@@ -112,21 +126,10 @@ export async function loginUser(email: string, password: string): Promise<LoginR
   return body as LoginResponse;
 }
 
-function getAuthorizationHeader(): Record<string, string> {
-  const accessToken = window.localStorage.getItem("access_token");
-
-  if (!accessToken) {
-    throw new Error("Tu sesión no está activa. Inicia sesión para continuar.");
-  }
-
-  return { Authorization: `Bearer ${accessToken}` };
-}
-
 export function getCurrentAccount(): Promise<CurrentAccount> {
   return request("/auth/me", {
     method: "GET",
-    headers: getAuthorizationHeader(),
-  });
+  }, true);
 }
 
 export function updateAccountProfile(
@@ -135,9 +138,8 @@ export function updateAccountProfile(
   return request("/profiles/me", {
     method: "PUT",
     headers: {
-      ...getAuthorizationHeader(),
       "Content-Type": "application/json",
     },
     body: JSON.stringify(profile),
-  });
+  }, true);
 }

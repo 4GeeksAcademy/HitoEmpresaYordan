@@ -143,12 +143,10 @@ export function NewCandidateForm({ onCreate }: NewCandidateFormProps) {
           className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-sky-300 focus:ring"
         >
           <option value="screening">screening</option>
+          <option value="revision">revision</option>
           <option value="entrevista-rrhh">entrevista-rrhh</option>
           <option value="entrevista-tecnica">entrevista-tecnica</option>
-          <option value="entrevista-final">entrevista-final</option>
           <option value="oferta">oferta</option>
-          <option value="hired">hired</option>
-          <option value="descartado">descartado</option>
         </select>
 
         <div className="md:col-span-2 flex items-center justify-between gap-3">
