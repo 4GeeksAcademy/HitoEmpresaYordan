@@ -7,7 +7,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 
 class IncidentStatus(str, Enum):
@@ -81,7 +81,7 @@ class IncidentCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     title: str = Field(min_length=1, max_length=120)
-    description: str
+    description: str = Field(min_length=1)
     category: IncidentCategory
     origin: IncidentOrigin
     branch: IncidentBranch = IncidentBranch.CENTRAL
@@ -95,11 +95,24 @@ class IncidentCreate(BaseModel):
             raise ValueError("Title must not be blank")
         return value
 
+    @field_validator("description")
+    @classmethod
+    def require_nonblank_description(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Description must not be blank")
+        return value
+
 
 class Incident(IncidentCreate):
-    id: int
-    created_at: datetime
-    updated_at: datetime
+    id: int = Field(gt=0)
+    created_at: AwareDatetime
+    updated_at: AwareDatetime
+
+    @model_validator(mode="after")
+    def require_ordered_timestamps(self):
+        if self.updated_at < self.created_at:
+            raise ValueError("updated_at must not precede created_at")
+        return self
 
 
 def validate_incident(data: Mapping[str, Any]) -> IncidentCreate:

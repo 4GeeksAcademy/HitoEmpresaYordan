@@ -8,6 +8,7 @@ DB_PATH = Path(__file__).resolve().parent / "data" / "db.json"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 db = TinyDB(DB_PATH, create_dirs=True, indent=2, ensure_ascii=False)
+incidents_table = db.table("incidents")
 suppliers_table = db.table("suppliers")
 records_table = db.table("records")
 record_notes_table = db.table("record_notes")

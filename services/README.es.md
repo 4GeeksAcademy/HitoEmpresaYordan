@@ -7,6 +7,57 @@ Cada subcarpeta dentro de `services/` debe corresponder a **un servicio concreto
 - **Propósito principal**: centralizar toda la lógica backend, APIs y consumidores de colas que dan soporte a los casos de uso de la compañía.
 - **Recomendación**: documenta en este archivo (o en sub-READMEs) los servicios que vayas añadiendo, su objetivo, tecnología usada y cómo ejecutarlos.
 
+## API de incidencias
+
+Desde la raíz, ejecuta `uv sync --package nexova-suppliers-api` y después
+`uv run --package nexova-suppliers-api uvicorn main:app --app-dir services/api`.
+Utiliza un único worker, porque TinyDB no coordina escrituras entre procesos.
+La documentación OpenAPI está disponible en `/docs`.
+
+Todos los endpoints requieren `Authorization: Bearer <access_token>`:
+
+| Método | Ruta | Resultado |
+| --- | --- | --- |
+| POST | `/api/incidents` | Crea una incidencia y devuelve 201 |
+| GET | `/api/incidents` | Lista; admite filtros `status`, `origin`, `branch` y `category` combinados con AND |
+| GET | `/api/incidents/summary` | Totales agregados, incluyendo todas las claves con valor cero cuando no hay datos |
+| GET | `/api/incidents/{id}` | Detalle o 404 |
+| PATCH | `/api/incidents/{id}/status` | Cambia únicamente el estado o devuelve 400 si la transición no está permitida |
+
+Ejemplo de cuerpo de creación:
+
+```json
+{
+	"title": "ATS no disponible",
+	"description": "El equipo no puede acceder al sistema de selección.",
+	"category": "technical_failure",
+	"origin": "internal",
+	"branch": "central",
+	"status": "open"
+}
+```
+
+`title`, `description`, `category` y `origin` son obligatorios. El título tiene
+entre 1 y 120 caracteres; título y descripción no pueden contener solo espacios.
+Si se omiten, `branch` vale `central` y `status` vale `open`; no se admite `null`.
+Los valores permitidos proceden de `nexova_shared` y del briefing de incidencias.
+El servidor genera un ID positivo y ambas fechas UTC; no admite esos campos ni
+otros campos adicionales en la petición.
+
+El PATCH recibe únicamente `{ "status": "in_progress" }`. Se admiten
+`open → in_progress`, `open → discarded`, `in_progress → resolved` e
+`in_progress → discarded`. Los estados finales no pueden cambiar y tampoco
+se acepta una transición al mismo estado. Se conserva `created_at` y se renueva
+`updated_at` al cambiar el estado.
+
+El resumen contiene `total`, `by_status`, `by_category`, `by_origin` y `by_branch`.
+La lista vacía se representa con `[]`. Los errores de validación devuelven 400
+con `detail` y `errors` (campo, mensaje y tipo); los errores inesperados devuelven
+500 con un mensaje genérico, sin detalles internos ni stack trace al cliente.
+Las sesiones ausentes o inválidas mantienen el comportamiento de autenticación
+de la API. Los datos se guardan en la tabla `incidents` de
+`services/api/data/db.json`, compartida con `scripts/seed_incidents.py`.
+
 ## Recuperacion de contrasena (AUTH-03)
 
 La API en `services/api` utiliza Resend mediante HTTPS, sin dependencias adicionales.
