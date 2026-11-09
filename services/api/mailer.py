@@ -1,10 +1,31 @@
 import json
 import logging
 import os
+import re
+from urllib.error import HTTPError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, urlopen
 
 logger = logging.getLogger(__name__)
+
+
+def _redact_error(message: str, token: str) -> str:
+    for secret in (os.environ.get("RESEND_API_KEY", ""), token):
+        if secret:
+            message = message.replace(secret, "[REDACTED]")
+    message = message.replace("\\/", "/")
+    message = re.sub(
+        r"(?:https?://|/reset-password\?)[^\s<>\"']+",
+        "[URL REDACTED]",
+        message,
+        flags=re.IGNORECASE,
+    )
+    message = re.sub(
+        r"\beyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*",
+        "[JWT REDACTED]",
+        message,
+    )
+    return message.replace("\r", "\\r").replace("\n", "\\n")
 
 
 def send_password_reset_email(email: str, token: str) -> None:
@@ -44,5 +65,21 @@ def send_password_reset_email(email: str, token: str) -> None:
         )
         with urlopen(request, timeout=10) as response:
             response.read()
-    except Exception:
-        logger.error("No se pudo enviar el correo de recuperacion de contrasena")
+    except HTTPError as error:
+        try:
+            body = error.read().decode("utf-8", errors="replace")
+        except Exception as read_error:
+            body = f"No se pudo leer la respuesta: {type(read_error).__name__}: {read_error}"
+        logger.error(
+            "No se pudo enviar el correo de recuperacion de contrasena: %s: %s; HTTP %s; respuesta: %s",
+            type(error).__name__,
+            _redact_error(str(error), token),
+            error.code,
+            _redact_error(body, token),
+        )
+    except Exception as error:
+        logger.error(
+            "No se pudo enviar el correo de recuperacion de contrasena: %s: %s",
+            type(error).__name__,
+            _redact_error(str(error), token),
+        )
