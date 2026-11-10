@@ -1,9 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { SupplierForm } from "@/src/components/supplier-form";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
 import { SupplierRow } from "@/src/components/supplier-row";
 import { ApiError, listSuppliers } from "@/src/services/api";
+
+const SupplierForm = dynamic(
+  () => import("@/src/components/supplier-form").then((mod) => mod.SupplierForm),
+  {
+    loading: () => (
+      <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500">
+        Cargando formulario…
+      </div>
+    ),
+  }
+);
 import {
   CATEGORIES,
   CATEGORY_LABELS,
@@ -71,8 +82,11 @@ export function SupplierDirectory() {
     setSuppliers((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
   }
 
-  const activeCount = suppliers.filter((s) => s.status === "active").length;
-  const suspendedCount = suppliers.length - activeCount;
+  const activeCount = useMemo(
+    () => suppliers.filter((s) => s.status === "active").length,
+    [suppliers]
+  );
+  const suspendedCount = useMemo(() => suppliers.length - activeCount, [suppliers.length, activeCount]);
   const hasFilters = Boolean(filters.country || filters.category);
 
   return (
