@@ -12,12 +12,10 @@ const statusOptions = ["all", "aplicado", "en-proceso", "contratado", "rechazado
 const stageOptions = [
   "all",
   "screening",
+  "revision",
   "entrevista-rrhh",
   "entrevista-tecnica",
-  "entrevista-final",
   "oferta",
-  "hired",
-  "descartado",
 ];
 
 export function FiltersBar({

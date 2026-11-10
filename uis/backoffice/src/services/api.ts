@@ -25,16 +25,41 @@ interface ValidationIssue {
 
 // FastAPI devuelve `detail` como string (404) o como lista de errores de Pydantic (422)
 function formatDetail(detail: unknown, status: number): string {
-  if (typeof detail === "string") return detail;
+  if (status === 0) return "No se pudo conectar con el servicio. Comprueba tu conexión e inténtalo de nuevo.";
+  if (status >= 500) return "El servicio no pudo completar la solicitud. Inténtalo de nuevo más tarde.";
+  if (typeof detail === "string" && detail.trim()) return detail;
   if (Array.isArray(detail)) {
     return (detail as ValidationIssue[])
       .map((issue) => {
-        const field = (issue.loc ?? []).filter((part) => part !== "body").join(".");
-        return field ? `${field}: ${issue.msg}` : String(issue.msg);
+        const field = (issue?.loc ?? []).filter((part) => part !== "body").join(".");
+        const message = typeof issue?.msg === "string" ? issue.msg : "Revisa este campo";
+        return field ? `${field}: ${message}` : message;
       })
       .join(" · ");
   }
-  return `Error ${status} en la petición`;
+  if (status === 401) return "Tu sesión no es válida. Inicia sesión de nuevo.";
+  if (status === 403) return "No tienes permiso para realizar esta acción.";
+  if (status === 404) return "El recurso solicitado ya no está disponible.";
+  if (status === 409) return "El cambio entra en conflicto con los datos actuales.";
+  if (status === 400 || status === 422) return "Revisa los datos e inténtalo de nuevo.";
+  return "No se pudo completar la solicitud. Inténtalo de nuevo.";
+}
+
+async function readResponseBody(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    if (response.ok) {
+      throw new ApiError("El servicio devolvió una respuesta no válida. Inténtalo de nuevo.", response.status);
+    }
+    return null;
+  }
+}
+
+function responseObject(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -55,45 +80,59 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       },
     });
   } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") throw error;
-    throw new ApiError("No se pudo conectar con la API de proveedores", 0);
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    throw new ApiError("No se pudo conectar con el servicio. Comprueba tu conexión e inténtalo de nuevo.", 0);
   }
 
   if (response.status === 204) return undefined as T;
 
-  const body = await response.json().catch(() => null);
+  const body = await readResponseBody(response);
   if (!response.ok) {
     if (response.status === 401) {
       removeToken();
       if (typeof window !== "undefined") window.location.replace("/login");
     }
-    throw new ApiError(formatDetail(body?.detail, response.status), response.status);
+    throw new ApiError(formatDetail(responseObject(body)?.detail, response.status), response.status);
   }
   return body as T;
 }
 
-export async function login(email: string, password: string): Promise<void> {
-  const response = await fetch(`${API_BASE}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ username: email, password }),
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new ApiError(formatDetail(body.detail, response.status), response.status);
-  if (typeof body.access_token !== "string" || !body.access_token) {
-    throw new ApiError("La API no devolvió un token de acceso válido.", 502);
-  }
-  window.localStorage.setItem(TOKEN_KEY, body.access_token);
-  window.dispatchEvent(new Event("nexova:auth-change"));
-}
-
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(TOKEN_KEY);
+  return window.localStorage.getItem("access_token") ?? window.localStorage.getItem(TOKEN_KEY);
+}
+
+export async function login(email: string, password: string): Promise<void> {
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ username: email, password }),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    throw new ApiError("No se pudo conectar con el servicio. Comprueba tu conexión e inténtalo de nuevo.", 0);
+  }
+
+  const body = responseObject(await readResponseBody(response));
+  if (!response.ok) {
+    throw new ApiError(formatDetail(body?.detail, response.status), response.status);
+  }
+
+  const accessToken = body?.access_token;
+  if (typeof accessToken !== "string" || !accessToken) {
+    throw new ApiError("La API no devolvió un token válido.", response.status);
+  }
+
+  window.localStorage.setItem("access_token", accessToken);
+  window.localStorage.setItem(TOKEN_KEY, accessToken);
+  window.dispatchEvent(new Event("nexova:auth-change"));
 }
 
 export function removeToken(): void {
   if (typeof window === "undefined") return;
+  window.localStorage.removeItem("access_token");
   window.localStorage.removeItem(TOKEN_KEY);
   window.dispatchEvent(new Event("nexova:auth-change"));
 }

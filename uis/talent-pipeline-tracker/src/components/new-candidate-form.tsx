@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ApiError } from "@/src/services/api";
 import type { CandidateStage, CandidateStatus, CreateCandidateInput } from "@/src/types";
 
 interface NewCandidateFormProps {
@@ -58,7 +59,7 @@ export function NewCandidateForm({ onCreate }: NewCandidateFormProps) {
       setMessage("Candidatura registrada con éxito.");
       setForm(initialState);
     } catch (error) {
-      const text = error instanceof Error ? error.message : "No se pudo crear la candidatura.";
+      const text = error instanceof ApiError ? error.message : "No se pudo crear la candidatura. Revisa los datos e inténtalo de nuevo.";
       setMessageType("error");
       setMessage(text);
     } finally {
@@ -143,12 +144,10 @@ export function NewCandidateForm({ onCreate }: NewCandidateFormProps) {
           className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-sky-300 focus:ring"
         >
           <option value="screening">screening</option>
+          <option value="revision">revision</option>
           <option value="entrevista-rrhh">entrevista-rrhh</option>
           <option value="entrevista-tecnica">entrevista-tecnica</option>
-          <option value="entrevista-final">entrevista-final</option>
           <option value="oferta">oferta</option>
-          <option value="hired">hired</option>
-          <option value="descartado">descartado</option>
         </select>
 
         <div className="md:col-span-2 flex items-center justify-between gap-3">

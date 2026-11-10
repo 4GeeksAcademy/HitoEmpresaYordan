@@ -1,3 +1,4 @@
+from hashlib import sha256
 from typing import Optional
 
 from passlib.hash import bcrypt
@@ -58,6 +59,62 @@ def get_user_by_email(email: str) -> Optional[User]:
     with db_lock:
         doc = users_table.get(Query().email == email.strip().lower())
     return _to_user(doc) if doc is not None else None
+
+
+def register_password_reset(
+    user: User, token_id: str, expires_at: int
+) -> bool:
+    with db_lock:
+        doc = users_table.get(doc_id=user.id)
+        if (
+            doc is None
+            or not doc["is_active"]
+            or doc["hashed_password"] != user.hashed_password
+        ):
+            return False
+        users_table.update(
+            {"password_reset": {
+                "token_hash": sha256(token_id.encode()).hexdigest(),
+                "expires_at": expires_at,
+                "password_hash": user.hashed_password,
+            }},
+            doc_ids=[user.id],
+        )
+    return True
+
+
+def consume_password_reset(user_id: int, token_id: str, new_password: str) -> bool:
+    hashed_password = bcrypt.hash(new_password)
+    with db_lock:
+        doc = users_table.get(doc_id=user_id)
+        reset = doc.get("password_reset") if doc is not None else None
+        if (
+            not reset
+            or not doc["is_active"]
+            or reset["expires_at"] <= utc_now().timestamp()
+            or reset["token_hash"] != sha256(token_id.encode()).hexdigest()
+            or reset["password_hash"] != doc["hashed_password"]
+        ):
+            return False
+        users_table.update(
+            {"hashed_password": hashed_password, "password_reset": None},
+            doc_ids=[user_id],
+        )
+    return True
+
+
+def change_user_password(user_id: int, current_password: str, new_password: str) -> bool:
+    with db_lock:
+        doc = users_table.get(doc_id=user_id)
+        if doc is None or not doc["is_active"] or not bcrypt.verify(
+            current_password, doc["hashed_password"]
+        ):
+            return False
+        users_table.update(
+            {"hashed_password": bcrypt.hash(new_password), "password_reset": None},
+            doc_ids=[user_id],
+        )
+    return True
 
 
 def update_user(user_id: int, payload: UserUpdate) -> Optional[User]:

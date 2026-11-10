@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateSupplierRate, updateSupplierStatus } from "@/src/services/api";
+import { ApiError, updateSupplierRate, updateSupplierStatus } from "@/src/services/api";
 import { CATEGORY_LABELS, type Supplier } from "@/src/types/supplier";
 
 const RENEWAL_WINDOW_DAYS = 60;
@@ -38,7 +38,7 @@ export function SupplierRow({ supplier, now, onUpdated }: Props) {
       onUpdated(await action());
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar el cambio");
+      setError(err instanceof ApiError ? err.message : "No se pudo guardar el cambio. Inténtalo de nuevo.");
       return false;
     } finally {
       setSaving(false);

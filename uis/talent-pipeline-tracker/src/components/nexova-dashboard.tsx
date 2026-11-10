@@ -1,0 +1,194 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { CandidateList } from "@/src/components/candidate-list";
+import { FiltersBar } from "@/src/components/filters-bar";
+import { NewCandidateForm } from "@/src/components/new-candidate-form";
+import { IncidentSummaryPanel } from "@/src/components/incident-summary";
+import { ApiError, createCandidate, getCandidates } from "@/src/services/api";
+import type { Candidate, CreateCandidateInput } from "@/src/types";
+import { logout } from "@/src/services/auth-session";
+
+export function NexovaDashboard() {
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const status = searchParams.get("status") ?? searchParams.get("estado") ?? "all";
+  const stage = searchParams.get("stage") ?? searchParams.get("etapa") ?? "all";
+  const query = searchParams.get("q") ?? "";
+
+  const updateQueryParam = useCallback(
+    (key: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (!value || value === "all") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+
+      // Normalize legacy query keys to keep a single canonical URL shape.
+      if (key === "status") params.delete("estado");
+      if (key === "stage") params.delete("etapa");
+
+      const next = params.toString();
+      router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const loadCandidates = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const data = await getCandidates();
+      setCandidates(data);
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "No fue posible cargar candidatos. Inténtalo de nuevo.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadCandidates();
+  }, [loadCandidates]);
+
+  const visibleCandidates = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return candidates.filter((candidate) => {
+      const matchesStatus = status === "all" ? true : candidate.estado === status;
+      const matchesStage = stage === "all" ? true : candidate.etapa === stage;
+      const matchesQuery =
+        normalizedQuery.length === 0
+          ? true
+          : candidate.nombre.toLowerCase().includes(normalizedQuery) ||
+            candidate.email.toLowerCase().includes(normalizedQuery);
+
+      return matchesStatus && matchesStage && matchesQuery;
+    });
+  }, [candidates, query, stage, status]);
+
+  const candidateMetrics = [
+    { label: "Total", value: candidates.length },
+    { label: "En proceso", value: candidates.filter((candidate) => candidate.estado === "en-proceso").length },
+    { label: "Contratadas", value: candidates.filter((candidate) => candidate.estado === "contratado").length },
+    { label: "Rechazadas", value: candidates.filter((candidate) => candidate.estado === "rechazado").length },
+  ];
+
+  const handleCreateCandidate = useCallback(
+    async (payload: CreateCandidateInput) => {
+      const created = await createCandidate(payload);
+
+      setCandidates((prev) => {
+        const exists = prev.some((candidate) => candidate.id === created.id);
+        if (exists) return prev;
+        return [created, ...prev];
+      });
+    },
+    []
+  );
+
+  return (
+    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-10 sm:px-8">
+      <header className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+          Nexova · People Talent
+        </p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+          Pipeline de candidaturas
+        </h1>
+        <p className="mt-3 max-w-3xl text-sm text-slate-600">
+          Visualiza el estado operativo del reclutamiento, filtra por etapa y gestiona nuevas candidaturas desde un solo panel.
+        </p>
+        <nav aria-label="Menú principal" className="mt-5 flex flex-wrap gap-3">
+          <Link
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            href="/incidents"
+          >
+            Incidencias
+          </Link>
+          <Link
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            href="/incidents/new"
+          >
+            Registrar incidencia
+          </Link>
+          <Link
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            href="/account/profile"
+          >
+            Mi perfil
+          </Link>
+          <button
+            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+            onClick={logout}
+            type="button"
+          >
+            Cerrar sesión
+          </button>
+        </nav>
+      </header>
+
+      <IncidentSummaryPanel />
+
+      <section aria-labelledby="candidate-metrics-title" aria-busy={isLoading} className="mt-6 border-y border-slate-300 py-5">
+        <h2 id="candidate-metrics-title" className="text-lg font-semibold text-slate-900">
+          Métricas de candidaturas
+        </h2>
+        {isLoading ? (
+          <p role="status" className="mt-3 text-sm text-slate-600">Cargando métricas…</p>
+        ) : error ? (
+          <div role="alert" className="mt-3 flex flex-wrap items-center gap-3 text-sm text-rose-800">
+            <p>No se pudieron cargar las métricas de candidaturas.</p>
+            <button type="button" onClick={() => void loadCandidates()} className="font-semibold underline">
+              Reintentar
+            </button>
+          </div>
+        ) : (
+          <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {candidateMetrics.map(({ label, value }) => (
+              <div key={label}>
+                <dt className="text-sm text-slate-600">{label}</dt>
+                <dd className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </section>
+
+      <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="space-y-4">
+          <FiltersBar
+            status={status}
+            stage={stage}
+            query={query}
+            onStatusChange={(value) => updateQueryParam("status", value)}
+            onStageChange={(value) => updateQueryParam("stage", value)}
+            onQueryChange={(value) => updateQueryParam("q", value)}
+          />
+
+          <CandidateList
+            candidates={visibleCandidates}
+            isLoading={isLoading}
+            error={error}
+            onRetry={() => void loadCandidates()}
+          />
+        </div>
+
+        <NewCandidateForm onCreate={handleCreateCandidate} />
+      </section>
+    </main>
+  );
+}

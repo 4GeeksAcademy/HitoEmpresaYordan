@@ -2,7 +2,7 @@ from datetime import date, datetime, timezone
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 
@@ -107,6 +107,64 @@ class SupplierStatusUpdate(BaseModel):
     status: SupplierStatus
 
 
+class CandidateRecordFields(BaseModel):
+    full_name: str = Field(..., min_length=1, max_length=200)
+    email: str = Field(..., max_length=254, pattern=EMAIL_PATTERN)
+    phone: str = Field(..., max_length=50)
+    position: str = Field(..., min_length=1, max_length=200)
+    linkedin_url: Optional[str] = Field("", max_length=2048)
+    cv_url: Optional[str] = Field("", max_length=2048)
+    experience_years: float = Field(0, ge=0)
+    status: str = Field("pending", min_length=1, max_length=50)
+    stage: str = Field("screening", min_length=1, max_length=50)
+    applied_at: datetime = Field(default_factory=utc_now)
+
+
+class CandidateRecordCreate(CandidateRecordFields):
+    model_config = ConfigDict(extra="forbid")
+
+
+class CandidateRecord(CandidateRecordFields):
+    model_config = ConfigDict(extra="allow")
+
+    id: str | int
+    external_id: Optional[str] = None
+
+
+class CandidateRecordPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Optional[str] = Field(None, min_length=1, max_length=50)
+    stage: Optional[str] = Field(None, min_length=1, max_length=50)
+
+    @model_validator(mode="after")
+    def require_changes(self):
+        if not self.model_fields_set or any(
+            getattr(self, field) is None for field in self.model_fields_set
+        ):
+            raise ValueError("Debe enviarse status o stage")
+        return self
+
+
+class CandidateNoteCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    content: str = Field(..., min_length=1, max_length=10000)
+    created_by: Optional[str] = Field(None, max_length=254)
+
+
+class CandidateNote(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    id: str | int
+    record_id: str | int
+    content: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    created_by: Optional[str] = None
+    external_id: Optional[str] = None
+
+
 class Supplier(SupplierBase):
     model_config = ConfigDict(use_enum_values=True)
 
@@ -120,6 +178,12 @@ class UserRole(str, Enum):
     USER = "user"
 
 
+def _validate_password_bytes(value: str) -> str:
+    if len(value.encode("utf-8")) > 72:
+        raise ValueError("La contrasena no puede superar 72 bytes")
+    return value
+
+
 class UserCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -129,6 +193,11 @@ class UserCreate(BaseModel):
     phone: Optional[str] = Field(None, max_length=50)
     address: Optional[str] = Field(None, max_length=500)
 
+    @field_validator("password")
+    @classmethod
+    def validate_password_bytes(cls, value: str) -> str:
+        return _validate_password_bytes(value)
+
 
 class UserUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -136,6 +205,11 @@ class UserUpdate(BaseModel):
     email: Optional[str] = Field(None, max_length=254, pattern=EMAIL_PATTERN)
     password: Optional[str] = Field(None, min_length=8)
     role: Optional[UserRole] = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_bytes(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_password_bytes(value) if value is not None else None
 
     @model_validator(mode="after")
     def reject_explicit_nulls(self):
@@ -196,6 +270,31 @@ class UserLogin(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class ForgotPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(..., max_length=254, pattern=EMAIL_PATTERN)
+
+
+class NewPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    new_password: str = Field(..., min_length=8, max_length=72)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password_bytes(cls, value: str) -> str:
+        return _validate_password_bytes(value)
+
+
+class ResetPasswordRequest(NewPasswordRequest):
+    token: str = Field(..., max_length=4096)
+
+
+class ChangePasswordRequest(NewPasswordRequest):
+    current_password: str
 
 
 class AuthMe(UserRead):

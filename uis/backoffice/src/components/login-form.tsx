@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { login } from "@/src/services/api";
+import { ApiError, login } from "@/src/services/api";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -18,7 +18,8 @@ export function LoginForm() {
       await login(email.trim(), password);
       window.location.replace("/");
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "No se pudo iniciar sesión.");
+      setError(reason instanceof ApiError ? reason.message : "No se pudo iniciar sesión. Comprueba tus datos e inténtalo de nuevo.");
+    } finally {
       setSubmitting(false);
     }
   }

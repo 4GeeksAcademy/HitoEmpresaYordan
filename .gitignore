@@ -1,6 +1,7 @@
 # Python / uv
 .venv/
 __pycache__/
+services/api/.env
 .env
 data/db.json
 

@@ -1,6 +1,6 @@
 # Common metrics (reference)
 
-Definitions and formulas for KPIs used across transversal projects. Adapt to company context (Brasaland, TrackFlow, Nexova).
+Definitions and formulas for KPIs used across transversal projects. Adapt to company context (Brasaland, Nexova).
 
 ---
 
@@ -14,7 +14,7 @@ Definitions and formulas for KPIs used across transversal projects. Adapt to com
 
 ---
 
-## Operations (Brasaland / TrackFlow style)
+## Operations (Brasaland / Nexova style)
 
 - **Waste rate**: `(waste quantity / total quantity used) * 100`
 - **On-time delivery %**: `(deliveries on time / total deliveries) * 100`

@@ -5,6 +5,7 @@ interface CandidateListProps {
   candidates: Candidate[];
   isLoading: boolean;
   error: string | null;
+  onRetry: () => void;
 }
 
 function StatusBadge({ value }: { value: string }) {
@@ -23,7 +24,7 @@ function StatusBadge({ value }: { value: string }) {
   );
 }
 
-export function CandidateList({ candidates, isLoading, error }: CandidateListProps) {
+export function CandidateList({ candidates, isLoading, error, onRetry }: CandidateListProps) {
   if (isLoading) {
     return (
       <div className="grid gap-3">
@@ -39,8 +40,11 @@ export function CandidateList({ candidates, isLoading, error }: CandidateListPro
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-700">
+      <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-700">
         {error}
+        <button type="button" onClick={onRetry} className="ml-3 font-semibold underline">
+          Reintentar
+        </button>
       </div>
     );
   }

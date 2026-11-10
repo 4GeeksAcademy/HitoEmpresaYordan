@@ -6,3 +6,85 @@ Cada subcarpeta dentro de `services/` debe corresponder a **un servicio concreto
 
 - **Propósito principal**: centralizar toda la lógica backend, APIs y consumidores de colas que dan soporte a los casos de uso de la compañía.
 - **Recomendación**: documenta en este archivo (o en sub-READMEs) los servicios que vayas añadiendo, su objetivo, tecnología usada y cómo ejecutarlos.
+
+## API de incidencias
+
+Desde la raíz, ejecuta `uv sync --package nexova-suppliers-api` y después
+`uv run --package nexova-suppliers-api uvicorn main:app --app-dir services/api`.
+Utiliza un único worker, porque TinyDB no coordina escrituras entre procesos.
+La documentación OpenAPI está disponible en `/docs`.
+
+Todos los endpoints requieren `Authorization: Bearer <access_token>`:
+
+| Método | Ruta | Resultado |
+| --- | --- | --- |
+| POST | `/api/incidents` | Crea una incidencia y devuelve 201 |
+| GET | `/api/incidents` | Lista; admite filtros `status`, `origin`, `branch` y `category` combinados con AND |
+| GET | `/api/incidents/summary` | Totales agregados, incluyendo todas las claves con valor cero cuando no hay datos |
+| GET | `/api/incidents/{id}` | Detalle o 404 |
+| PATCH | `/api/incidents/{id}/status` | Cambia únicamente el estado o devuelve 400 si la transición no está permitida |
+
+Ejemplo de cuerpo de creación:
+
+```json
+{
+	"title": "ATS no disponible",
+	"description": "El equipo no puede acceder al sistema de selección.",
+	"category": "technical_failure",
+	"origin": "internal",
+	"branch": "central",
+	"status": "open"
+}
+```
+
+`title`, `description`, `category` y `origin` son obligatorios. El título tiene
+entre 1 y 120 caracteres; título y descripción no pueden contener solo espacios.
+Si se omiten, `branch` vale `central` y `status` vale `open`; no se admite `null`.
+Los valores permitidos proceden de `nexova_shared` y del briefing de incidencias.
+El servidor genera un ID positivo y ambas fechas UTC; no admite esos campos ni
+otros campos adicionales en la petición.
+
+El PATCH recibe únicamente `{ "status": "in_progress" }`. Se admiten
+`open → in_progress`, `open → discarded`, `in_progress → resolved` e
+`in_progress → discarded`. Los estados finales no pueden cambiar y tampoco
+se acepta una transición al mismo estado. Se conserva `created_at` y se renueva
+`updated_at` al cambiar el estado.
+
+El resumen contiene `total`, `by_status`, `by_category`, `by_origin` y `by_branch`.
+La lista vacía se representa con `[]`. Los errores de validación devuelven 400
+con `detail` y `errors` (campo, mensaje y tipo); los errores inesperados devuelven
+500 con un mensaje genérico, sin detalles internos ni stack trace al cliente.
+Las sesiones ausentes o inválidas mantienen el comportamiento de autenticación
+de la API. Los datos se guardan en la tabla `incidents` de
+`services/api/data/db.json`, compartida con `scripts/seed_incidents.py`.
+
+## Recuperacion de contrasena (AUTH-03)
+
+La API en `services/api` utiliza Resend mediante HTTPS, sin dependencias adicionales.
+Configura estas variables en el entorno del servidor (o en su `.env` local, nunca versionado):
+
+- `JWT_SECRET`: secreto de firma JWT ya utilizado por la autenticacion.
+- `RESEND_API_KEY`: clave privada de Resend, obtenida exclusivamente del entorno.
+- `RESEND_FROM_EMAIL`: remitente de un dominio verificado en Resend.
+- `APP_BASE_URL`: URL publica del frontend, sin parametros ni fragmentos; usar HTTPS en produccion.
+
+`POST /auth/forgot-password` recibe `{ "email": "persona@example.com" }` y responde
+200 con el mismo mensaje para cuentas existentes y desconocidas. El envio se realiza
+en segundo plano; los errores del proveedor no cambian la respuesta ni registran secretos.
+El correo contiene un enlace `/reset-password?token=...` que caduca en 30 minutos.
+
+`POST /auth/reset-password` recibe `{ "token": "...", "new_password": "..." }`.
+Rechaza con 400 los tokens invalidos, caducados o ya utilizados. Solo es valido el
+ultimo enlace solicitado; su estado se guarda en TinyDB y se consume junto con la
+actualizacion de contrasena bajo el bloqueo compartido.
+
+`POST /auth/change-password` requiere `Authorization: Bearer <access_token>` y
+recibe `{ "current_password": "...", "new_password": "..." }`. Una contrasena actual
+incorrecta produce 400; una sesion invalida o ausente produce 401. Ambos cambios
+guardan un hash bcrypt e invalidan la recuperacion pendiente. Las contrasenas nuevas
+deben tener al menos 8 caracteres y no superar los 72 bytes admitidos por bcrypt.
+
+El frontend debe implementar la pagina `/reset-password`; estos endpoints solo
+cubren el backend. TinyDB y su bloqueo son de un unico proceso: ejecutar con un solo
+worker. Para varios procesos, migrar la actualizacion y el consumo a una transaccion
+en una base de datos que soporte concurrencia multiproceso.

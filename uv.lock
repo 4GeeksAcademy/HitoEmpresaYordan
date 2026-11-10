@@ -4,6 +4,7 @@ requires-python = ">=3.11"
 
 [manifest]
 members = [
+    "nexova-shared",
     "nexova-suppliers-api",
 ]
 
@@ -445,12 +446,24 @@ bcrypt = [
 ]
 
 [[package]]
+name = "nexova-shared"
+version = "0.1.0"
+source = { editable = "packages/shared" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2.7" }]
+
+[[package]]
 name = "nexova-suppliers-api"
 version = "0.1.0"
 source = { editable = "services/api" }
 dependencies = [
     { name = "fastapi" },
     { name = "libpass", extra = ["bcrypt"] },
+    { name = "nexova-shared" },
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "python-jose", extra = ["cryptography"] },
@@ -463,6 +476,7 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "libpass", extras = ["bcrypt"], specifier = ">=1.9.4" },
+    { name = "nexova-shared", editable = "packages/shared" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "python-dotenv", specifier = ">=1.2.4" },
     { name = "python-jose", extras = ["cryptography"], specifier = ">=3.5.0" },

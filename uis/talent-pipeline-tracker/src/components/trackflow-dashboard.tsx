@@ -119,6 +119,7 @@ export function TrackFlowDashboard() {
             candidates={visibleCandidates}
             isLoading={isLoading}
             error={error}
+            onRetry={() => void loadCandidates()}
           />
         </div>
 
