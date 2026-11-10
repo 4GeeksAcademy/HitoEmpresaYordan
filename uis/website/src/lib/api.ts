@@ -1,14 +1,11 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+import { getAuthHeaders, getToken, removeToken, setToken, isTokenValid } from "@nexova/auth";
+import { ApiError } from "@nexova/auth";
 
-export interface AuthResponse {
-  token: string;
-  user?: Record<string, unknown>;
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
+// ---------------------------------------------------------------------------
+// Tipos específicos del website (no compartidos con backoffice)
+// ---------------------------------------------------------------------------
 
 export interface RegisterPayload {
   email: string;
@@ -19,7 +16,7 @@ export interface RegisterPayload {
   address?: string;
 }
 
-export type UserRole = 'admin' | 'manager' | 'user';
+export type UserRole = "admin" | "manager" | "user";
 
 export interface UserProfile {
   id: number;
@@ -46,76 +43,46 @@ export interface UpdateProfilePayload {
   address?: string | null;
 }
 
-interface AuthMeResponse extends Omit<UserProfile, 'name' | 'phone' | 'address'> {
+interface AuthMeResponse
+  extends Omit<UserProfile, "name" | "phone" | "address"> {
   profile: ProfileResponse | null;
 }
 
-class UnauthorizedError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'UnauthorizedError';
-  }
-}
+// ---------------------------------------------------------------------------
+// Helpers de peticiones autenticadas
+// ---------------------------------------------------------------------------
 
-function handleUnauthorized(): void {
-  removeToken();
-  if (typeof window !== 'undefined') {
-    const event = new Event('auth:logout');
-    window.dispatchEvent(event);
-  }
-}
-
-function getAuthHeader(): Record<string, string> {
-  const token = getToken();
-  if (!token) {
-    throw new Error('No authentication token found');
-  }
-  return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
-}
-
-async function handleProtectedResponse(response: Response): Promise<Record<string, unknown>> {
+async function handleProtectedResponse<T>(
+  response: Response,
+): Promise<T> {
   if (response.status === 401) {
-    handleUnauthorized();
-    throw new UnauthorizedError('Session expired. Please login again.');
+    removeToken();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("auth:logout"));
+    }
+    throw new ApiError("Sesión expirada. Inicia sesión de nuevo.", 401);
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || `Request failed with status ${response.status}`);
+    const errorBody = await response.json().catch(() => ({}));
+    throw new Error(
+      errorBody.detail ||
+        `Error en la petición (status ${response.status})`,
+    );
   }
 
-  return response.json();
+  return response.json() as Promise<T>;
 }
 
-export async function login(payload: LoginPayload): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({ username: payload.email, password: payload.password }),
-  });
-
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(body.detail || `Login failed with status ${response.status}`);
-  }
-
-  if (typeof body.access_token !== 'string' || !body.access_token) {
-    throw new Error('The server did not return an access token');
-  }
-
-  return { token: body.access_token };
-}
+// ---------------------------------------------------------------------------
+// Register
+// ---------------------------------------------------------------------------
 
 export async function register(payload: RegisterPayload): Promise<void> {
   const name = [payload.first_name, payload.last_name]
     .map((part) => part?.trim())
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
   const user = {
     email: payload.email,
     password: payload.password,
@@ -124,26 +91,32 @@ export async function register(payload: RegisterPayload): Promise<void> {
     ...(payload.address ? { address: payload.address } : {}),
   };
   const response = await fetch(`${API_BASE_URL}/users`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(user),
   });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || `Registration failed with status ${response.status}`);
+    throw new Error(
+      error.detail || `Registro fallido (status ${response.status})`,
+    );
   }
 }
 
+// ---------------------------------------------------------------------------
+// Profile (getCurrentUser / updateProfile)
+// ---------------------------------------------------------------------------
+
 export async function getCurrentUser(): Promise<UserProfile> {
   const response = await fetch(`${API_BASE_URL}/auth/me`, {
-    method: 'GET',
-    headers: getAuthHeader(),
+    method: "GET",
+    headers: getAuthHeaders(),
   });
 
-  const body = (await handleProtectedResponse(response)) as unknown as AuthMeResponse;
+  const body = await handleProtectedResponse<AuthMeResponse>(response);
   return {
     id: body.id,
     email: body.email,
@@ -156,32 +129,19 @@ export async function getCurrentUser(): Promise<UserProfile> {
   };
 }
 
-export async function updateProfile(payload: UpdateProfilePayload): Promise<ProfileResponse> {
+export async function updateProfile(
+  payload: UpdateProfilePayload,
+): Promise<ProfileResponse> {
   const response = await fetch(`${API_BASE_URL}/profiles/me`, {
-    method: 'PUT',
-    headers: getAuthHeader(),
+    method: "PUT",
+    headers: getAuthHeaders(),
     body: JSON.stringify(payload),
   });
 
-  return (await handleProtectedResponse(response)) as unknown as ProfileResponse;
+  return handleProtectedResponse<ProfileResponse>(response);
 }
 
-export function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('auth_token');
-}
-
-export function setToken(token: string): void {
-  localStorage.setItem('auth_token', token);
-}
-
-export function removeToken(): void {
-  localStorage.removeItem('auth_token');
-}
-
-export function isTokenValid(): boolean {
-  const token = getToken();
-  return !!token;
-}
+// Re-exportamos para compatibilidad con imports existentes
+export { getToken, setToken, removeToken, isTokenValid } from "@nexova/auth";
 
 

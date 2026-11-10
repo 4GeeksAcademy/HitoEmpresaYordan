@@ -1,37 +1,5 @@
-'use client';
-
-import { useCallback } from 'react';
-import { getToken, setToken, removeToken } from '@/lib/api';
-
-export interface UseAuthReturn {
-  token: string | null;
-  isAuthenticated: boolean;
-  login: (token: string) => void;
-  logout: () => void;
-  clearAuth: () => void;
-}
-
-export function useAuth(): UseAuthReturn {
-  const token = getToken();
-  const isAuthenticated = !!token;
-
-  const login = useCallback((newToken: string) => {
-    setToken(newToken);
-  }, []);
-
-  const logout = useCallback(() => {
-    removeToken();
-  }, []);
-
-  const clearAuth = useCallback(() => {
-    removeToken();
-  }, []);
-
-  return {
-    token,
-    isAuthenticated,
-    login,
-    logout,
-    clearAuth,
-  };
-}
+// Re-export del hook compartido.
+// El resto del website puede seguir importando desde @/hooks/useAuth
+// sin cambiar sus imports.
+export { useAuth } from "@nexova/auth";
+export type { UseAuthReturn } from "@nexova/auth";

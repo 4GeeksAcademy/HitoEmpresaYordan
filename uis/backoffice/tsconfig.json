@@ -19,7 +19,13 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@nexova/auth": [
+        "../../packages/shared/src/nexova_shared/auth/index.ts"
+      ],
+      "@nexova/auth/*": [
+        "../../packages/shared/src/nexova_shared/auth/*"
+      ]
     }
   },
   "include": [

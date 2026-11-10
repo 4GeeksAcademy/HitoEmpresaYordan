@@ -4,19 +4,16 @@ import type {
   SupplierFilters,
   SupplierStatus,
 } from "@/src/types/supplier";
+import {
+  ApiError,
+  getToken,
+  removeToken,
+} from "@nexova/auth";
+
+// Re-exportamos para compatibilidad con imports existentes
+export { ApiError, getToken, removeToken } from "@nexova/auth";
 
 const API_BASE = "/api";
-const TOKEN_KEY = "auth_token";
-
-export class ApiError extends Error {
-  status: number;
-
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-  }
-}
 
 interface ValidationIssue {
   loc?: (string | number)[];
@@ -95,46 +92,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(formatDetail(responseObject(body)?.detail, response.status), response.status);
   }
   return body as T;
-}
-
-export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem("access_token") ?? window.localStorage.getItem(TOKEN_KEY);
-}
-
-export async function login(email: string, password: string): Promise<void> {
-  let response: Response;
-  try {
-    response = await fetch(`${API_BASE}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ username: email, password }),
-    });
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") throw error;
-    throw new ApiError("No se pudo conectar con el servicio. Comprueba tu conexión e inténtalo de nuevo.", 0);
-  }
-
-  const body = responseObject(await readResponseBody(response));
-  if (!response.ok) {
-    throw new ApiError(formatDetail(body?.detail, response.status), response.status);
-  }
-
-  const accessToken = body?.access_token;
-  if (typeof accessToken !== "string" || !accessToken) {
-    throw new ApiError("La API no devolvió un token válido.", response.status);
-  }
-
-  window.localStorage.setItem("access_token", accessToken);
-  window.localStorage.setItem(TOKEN_KEY, accessToken);
-  window.dispatchEvent(new Event("nexova:auth-change"));
-}
-
-export function removeToken(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem("access_token");
-  window.localStorage.removeItem(TOKEN_KEY);
-  window.dispatchEvent(new Event("nexova:auth-change"));
 }
 
 export function listSuppliers(filters: SupplierFilters, signal?: AbortSignal) {

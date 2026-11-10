@@ -3,6 +3,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Hook que escucha el evento `auth:logout` y redirige a /login.
+ * Se usa en el provider del layout raíz.
+ */
 export function useAuthInterceptor(): void {
   const router = useRouter();
 

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { register, login, setToken } from '@/lib/api';
+import { register } from '@/lib/api';
+import { login } from '@nexova/auth';
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -48,17 +49,8 @@ export default function RegisterForm() {
       await register(registerPayload);
 
       // Step 2: Automatically login with the same credentials
-      const loginResponse = await login({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (loginResponse.token) {
-        setToken(loginResponse.token);
-        router.push('/dashboard');
-      } else {
-        setErrors({ general: 'Registration successful but login failed' });
-      }
+      await login({ email: formData.email, password: formData.password });
+      router.push('/dashboard');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
       

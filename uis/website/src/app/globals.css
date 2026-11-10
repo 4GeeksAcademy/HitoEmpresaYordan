@@ -1,33 +1,64 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
-:root {
-  color-scheme: light;
-  --ink: #172521;
-  --ink-soft: #3d4e46;
-  --muted: #6f7d73;
-  --paper: #f4f6f1;
-  --surface: #fff;
-  --line: #d9e0d8;
-  --lime: #c7e879;
-  --green: #4e6b45;
-  --coral: #bf654c;
-  --blue: #527985;
-  --font-body: "DM Sans", "Avenir Next", sans-serif;
-  --font-display: "DM Serif Display", Georgia, serif;
+@theme {
+  --font-sans: "Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif";
+
+  --animate-hero-enter: heroFadeUp 0.8s ease-out both;
+  --animate-hero-enter-delay: heroFadeUp 0.95s ease-out 0.12s both;
+  --animate-soft-float: softFloat 6s ease-in-out infinite;
+  --animate-map-drift: mapDrift 9s ease-in-out infinite;
+  --animate-map-line: mapDraw 2.1s ease-out forwards,
+    mapRoutePulse 2.8s ease-in-out 2.1s infinite;
+  --animate-map-line-delayed: mapDraw 2.1s ease-out 0.35s forwards,
+    mapRoutePulse 2.8s ease-in-out 2.45s infinite;
+  --animate-map-line-late: mapDraw 2.1s ease-out 0.65s forwards,
+    mapRoutePulse 2.8s ease-in-out 2.75s infinite;
+  --animate-map-line-soft: mapDraw 2.5s linear 0.8s forwards,
+    mapRoutePulse 2.4s ease-in-out 3s infinite;
+  --animate-map-pulse: mapPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes heroFadeUp {
+  0% { opacity: 0; transform: translateY(24px) scale(0.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes softFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes mapDraw {
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes mapRoutePulse {
+  0%, 100% {
+    opacity: 0.62;
+    filter: drop-shadow(0 0 0 rgba(34, 211, 238, 0));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.55)) drop-shadow(0 0 12px rgba(232, 121, 249, 0.35));
+  }
+}
+
+@keyframes mapPulse {
+  0%, 100% { transform: scale(1); opacity: 0.78; }
+  50% { transform: scale(1.38); opacity: 0.3; }
+}
+
+@keyframes mapDrift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -6px, 0); }
 }
 
 * { box-sizing: border-box; }
-html { min-width: 320px; scroll-behavior: smooth; scroll-padding-top: 86px; }
-body { margin: 0; color: var(--ink); background: var(--paper); font-family: var(--font-body); }
-button, input { font: inherit; }
+html { min-width: 320px; scroll-behavior: smooth; }
+body { margin: 0; }
 a { color: inherit; }
-a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--coral); outline-offset: 3px; }
-::selection { color: var(--ink); background: var(--lime); }
-
-.site-header { position: relative; z-index: 5; min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 0 max(5vw, calc((100vw - 1320px) / 2)); color: #f7f8f1; background: var(--ink); border-bottom: 3px solid var(--lime); }
-.wordmark { display: inline-flex; align-items: center; gap: 11px; color: inherit; font-size: 14px; font-weight: 700; text-decoration: none; }
-.wordmark-symbol { width: 34px; height: 34px; display: grid; place-items: center; color: var(--ink); background: var(--lime); font-family: var(--font-display); font-size: 21px; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid #C46A4A; outline-offset: 3px; }
 .desktop-nav { display: flex; align-items: center; gap: 30px; }
 .desktop-nav a, .site-footer > a:last-child { color: #d1d9d1; font-size: 13px; text-decoration: none; }
 .desktop-nav a:hover, .site-footer a:hover { color: var(--lime); }
