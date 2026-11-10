@@ -22,6 +22,7 @@ from routes.incidents import router as incidents_router
 from routes.records import router as records_router
 from routes.suppliers import router as suppliers_router
 from database import init_db
+from routes.inventory import router as inventory_router
 from shared.incident_analysis import (
     CSVFormatError,
     analyze_csv,
@@ -49,6 +50,7 @@ app.include_router(records_router)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(profiles_router)
+app.include_router(inventory_router)
 
 
 @app.on_event("startup")
