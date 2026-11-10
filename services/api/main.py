@@ -21,7 +21,7 @@ from profiles import router as profiles_router
 from routes.incidents import router as incidents_router
 from routes.records import router as records_router
 from routes.suppliers import router as suppliers_router
-from database import init_db
+from database import init_db, seed_inventory
 from routes.inventory import router as inventory_router
 from shared.incident_analysis import (
     CSVFormatError,
@@ -55,10 +55,12 @@ app.include_router(inventory_router)
 
 @app.on_event("startup")
 def on_startup():
-    """Inicializa las tablas de SQLModel en Supabase al arrancar la aplicación."""
+    """Inicializa las tablas y siembra datos de inventario en Supabase."""
     try:
         init_db()
         logger.info("Tablas de inventario creadas/verificadas en Supabase")
+        seed_inventory()
+        logger.info("Datos semilla de inventario verificados")
     except RuntimeError as e:
         logger.warning("Supabase no disponible: %s", e)
 
