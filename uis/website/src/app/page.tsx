@@ -15,7 +15,6 @@ function HeroSection() {
         fill
         priority
         sizes="100vw"
-        unoptimized
       />
       <div className="absolute inset-0 bg-gradient-to-b from-[#070B16]/88 via-[#070B16]/82 to-[#070B16]/92" />
       <div className="absolute -left-16 top-20 h-56 w-56 rounded-full bg-cyan-300/25 blur-[90px] motion-reduce:animate-none animate-soft-float" />
@@ -570,12 +569,13 @@ function ContactSection() {
               id="tipo"
               name="tipo"
               required
+              defaultValue=""
               className="w-full rounded-lg border border-white/20 bg-[#081228]/85 px-3 py-2.5 text-sm text-white focus:border-cyan-300 focus:outline-none"
               aria-required="true"
               aria-invalid="false"
               aria-describedby="tipo-error"
             >
-              <option value="" selected disabled>
+              <option value="" disabled>
                 Selecciona una opción
               </option>
               <option value="consulta-empresa">Consulta empresarial</option>
@@ -764,40 +764,38 @@ function Footer() {
 function LandingScripts() {
   return (
     <>
-      <Script src="/validation.js" strategy="afterInteractive" />
-      <Script src="/demo.js" strategy="afterInteractive" />
+      <Script src="/demo.js" strategy="lazyOnload" />
       <Script id="landing-interactive" strategy="afterInteractive">
         {`
           (function () {
-            const desktopNav = document.getElementById("desktopNav");
-            const mobileNav = document.getElementById("mobileNav");
-            const headerCta = document.getElementById("headerCta");
-            const heroCard = document.getElementById("heroCard");
-            const heroSection = document.getElementById("inicio");
-            const heroImage = heroSection ? heroSection.querySelector('img[src="/imagenes/imagenhero.jpg"]') : null;
-            const revealEls = Array.from(document.querySelectorAll("[data-reveal]"));
-            const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            var desktopNav = document.getElementById("desktopNav");
+            var mobileNav = document.getElementById("mobileNav");
+            var headerCta = document.getElementById("headerCta");
+            var heroCard = document.getElementById("heroCard");
+            var heroSection = document.getElementById("inicio");
+            var revealEls = Array.from(document.querySelectorAll("[data-reveal]"));
+            var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
             revealEls.forEach(function (el) {
               el.classList.add("opacity-0", "translate-y-6", "transition-all", "duration-700", "ease-out");
             });
 
             function centerSectionInViewport(el, behavior) {
-              const rect = el.getBoundingClientRect();
-              const absoluteTop = window.scrollY + rect.top;
-              const targetTop = Math.max(0, absoluteTop - window.innerHeight / 2 + rect.height / 2);
+              var rect = el.getBoundingClientRect();
+              var absoluteTop = window.scrollY + rect.top;
+              var targetTop = Math.max(0, absoluteTop - window.innerHeight / 2 + rect.height / 2);
               window.scrollTo({ top: targetTop, behavior: behavior });
             }
 
             function centerHashTarget(hash, behavior) {
               if (!hash || hash === "#" || hash === "#contenido-principal") return;
-              const el = hash === "#inicio" && heroCard ? heroCard : document.querySelector(hash);
+              var el = hash === "#inicio" && heroCard ? heroCard : document.querySelector(hash);
               if (!el) return;
               centerSectionInViewport(el, behavior);
             }
 
             function syncNavFade() {
-              const shouldFade = window.scrollY > 12;
+              var shouldFade = window.scrollY > 12;
               [desktopNav, mobileNav, headerCta].forEach(function (el) {
                 if (!el) return;
                 el.classList.toggle("opacity-40", shouldFade);
@@ -805,11 +803,11 @@ function LandingScripts() {
             }
 
             function syncHeroImageFade() {
-              if (!heroSection || !heroImage) return;
-              const rect = heroSection.getBoundingClientRect();
-              const progress = Math.min(Math.max((0 - rect.top) / (rect.height * 0.95), 0), 1);
-              const baseOpacity = 0.3;
-              heroImage.style.opacity = String(baseOpacity * (1 - progress));
+              if (!heroSection) return;
+              var rect = heroSection.getBoundingClientRect();
+              var progress = Math.min(Math.max((0 - rect.top) / (rect.height * 0.95), 0), 1);
+              var img = rect.top < 0 ? heroSection.querySelector('img') : null;
+              if (img) img.style.opacity = String(0.3 * (1 - progress));
             }
 
             window.addEventListener("scroll", syncNavFade, { passive: true });
@@ -819,9 +817,9 @@ function LandingScripts() {
 
             document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
               anchor.addEventListener("click", function (event) {
-                const href = anchor.getAttribute("href");
+                var href = anchor.getAttribute("href");
                 if (!href || href === "#" || href === "#contenido-principal") return;
-                const target = href === "#inicio" && heroCard ? heroCard : document.querySelector(href);
+                var target = href === "#inicio" && heroCard ? heroCard : document.querySelector(href);
                 if (!target) return;
                 event.preventDefault();
                 history.pushState(null, "", href);
@@ -845,7 +843,7 @@ function LandingScripts() {
                 el.classList.add("opacity-100", "translate-y-0");
               });
             } else if ("IntersectionObserver" in window) {
-              const observer = new IntersectionObserver(
+              var observer = new IntersectionObserver(
                 function (entries, obs) {
                   entries.forEach(function (entry) {
                     if (!entry.isIntersecting) return;
