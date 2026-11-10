@@ -3,6 +3,7 @@ from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from sqlmodel import Field as SQLField, SQLModel
 
 EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 
@@ -299,3 +300,49 @@ class ChangePasswordRequest(NewPasswordRequest):
 
 class AuthMe(UserRead):
     profile: Optional[Profile] = None
+
+
+# ──────────────────────────────────────────────
+# SQLModel ORM — Inventario (Supabase / PostgreSQL)
+# ──────────────────────────────────────────────
+
+
+class Asset(SQLModel, table=True):
+    """Activo físico o material gestionado por Nexova (equivalente a Product)."""
+
+    __tablename__ = "assets"
+
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    name: str = SQLField(min_length=1, max_length=200)
+    sku: str = SQLField(unique=True, min_length=1, max_length=50, index=True)
+    category: str = SQLField(min_length=1, max_length=50)  # "hardware", "peripherals", "office_supplies", "training_materials"
+    office: str = SQLField(min_length=1, max_length=50)     # "Valencia" o "Miami"
+
+
+class AssetEntry(SQLModel, table=True):
+    """Entrada de inventario — compra o entrega recibida por Nexova (equivalente a InboundOrder)."""
+
+    __tablename__ = "asset_entries"
+
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    asset_id: int = SQLField(foreign_key="assets.id", index=True)
+    quantity: int = SQLField(ge=1)
+    supplier: str = SQLField(min_length=1, max_length=200)
+    office: str = SQLField(min_length=1, max_length=50)  # "Valencia" o "Miami"
+    created_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
+    user_uuid: str = SQLField(min_length=1, max_length=128)
+
+
+class AssetExit(SQLModel, table=True):
+    """Salida de inventario — asignación a empleado o evento de consumo (equivalente a OutboundOrder)."""
+
+    __tablename__ = "asset_exits"
+
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    asset_id: int = SQLField(foreign_key="assets.id", index=True)
+    quantity: int = SQLField(ge=1)
+    exit_type: str = SQLField(min_length=1, max_length=20)  # "allocation" o "consumption"
+    assigned_to: Optional[str] = SQLField(default=None, max_length=200)
+    office: str = SQLField(min_length=1, max_length=50)  # "Valencia" o "Miami"
+    created_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
+    user_uuid: str = SQLField(min_length=1, max_length=128)

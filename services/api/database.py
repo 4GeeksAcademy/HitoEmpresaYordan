@@ -5,7 +5,7 @@ from threading import Lock
 from typing import Optional
 
 from dotenv import load_dotenv
-from sqlmodel import Session, create_engine
+from sqlmodel import SQLModel, Session, create_engine
 from tinydb import TinyDB
 
 load_dotenv(Path(__file__).with_name(".env"))
@@ -46,6 +46,9 @@ def _get_engine():
                 "DATABASE_URL no está configurada. "
                 "Define la variable de entorno en el archivo .env"
             )
+        # Forzar el uso de psycopg2 (compatible con psycopg2-binary)
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
         DATABASE_URL = url
         _engine = create_engine(url, pool_pre_ping=True)
     return _engine
@@ -67,3 +70,19 @@ def get_db() -> Generator[Session, None, None]:
     """
     with Session(_get_engine()) as session:
         yield session
+
+
+def init_db():
+    """Crea todas las tablas definidas con SQLModel en la base de datos Supabase.
+
+    Debe llamarse al iniciar la aplicación. Si Supabase no está disponible
+    (por ejemplo en entornos de test o desarrollo local sin conexión),
+    la función registra una advertencia y continúa sin fallar.
+    """
+    try:
+        SQLModel.metadata.create_all(_get_engine())
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning(
+            "No se pudieron crear las tablas en Supabase: %s", exc
+        )
