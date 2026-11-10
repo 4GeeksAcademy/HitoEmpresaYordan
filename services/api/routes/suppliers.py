@@ -5,6 +5,7 @@ from tinydb import Query
 from tinydb.table import Document
 
 from auth import get_current_user
+from cache import cached, invalidate, store
 from database import db_lock, suppliers_table
 from models import (
     Country,
@@ -44,6 +45,7 @@ def create_supplier(
     with db_lock:
         supplier_id = suppliers_table.insert(data)
     supplier = Supplier(id=supplier_id, **data)
+    invalidate("suppliers:list")
     return SupplierDetailRead.model_validate(supplier)
 
 
@@ -53,6 +55,12 @@ def list_suppliers(
     category: Optional[SupplierCategory] = None,
     current_user: dict = Depends(get_current_user),
 ) -> List[SupplierListRead]:
+    # Construir clave de caché con los filtros aplicados
+    cache_key = f"suppliers:list:country={country or ''}:category={category or ''}"
+    cached_result = cached(cache_key)
+    if cached_result is not None:
+        return cached_result
+
     q = Query()
     conditions = []
     if country is not None:
@@ -68,7 +76,9 @@ def list_suppliers(
             docs = suppliers_table.search(cond)
         else:
             docs = suppliers_table.all()
-    return [SupplierListRead.model_validate(to_supplier(doc)) for doc in docs]
+    result = [SupplierListRead.model_validate(to_supplier(doc)) for doc in docs]
+    store(cache_key, result)
+    return result
 
 
 @router.get("/{supplier_id}", response_model=SupplierDetailRead)
@@ -95,6 +105,7 @@ def update_rate(
             doc_ids=[supplier_id],
         )
         doc = suppliers_table.get(doc_id=supplier_id)
+    invalidate("suppliers:list")
     return SupplierDetailRead.model_validate(to_supplier(doc))
 
 
@@ -109,6 +120,7 @@ def update_status(
         get_or_404(supplier_id)
         suppliers_table.update({"status": payload.status.value}, doc_ids=[supplier_id])
         doc = suppliers_table.get(doc_id=supplier_id)
+    invalidate("suppliers:list")
     return SupplierDetailRead.model_validate(to_supplier(doc))
 
 
@@ -120,4 +132,5 @@ def delete_supplier(
     with db_lock:
         get_or_404(supplier_id)
         suppliers_table.remove(doc_ids=[supplier_id])
+    invalidate("suppliers:list")
     return Response(status_code=status.HTTP_204_NO_CONTENT)

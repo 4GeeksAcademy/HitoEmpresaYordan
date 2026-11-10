@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict
 from tinydb import Query
 from tinydb.table import Document
 
+from cache import cached, invalidate, store
 from auth import get_current_user
 from database import db_lock, incidents_table
 
@@ -63,6 +64,7 @@ def create_incident(payload: IncidentCreate) -> Incident:
     }
     with db_lock:
         incident_id = incidents_table.insert(data)
+    invalidate("incidents:summary")
     return Incident(id=incident_id, **data)
 
 
@@ -85,6 +87,11 @@ def list_incidents(
 
 @router.get("/summary", response_model=IncidentSummary)
 def summarize_incidents() -> IncidentSummary:
+    cache_key = "incidents:summary"
+    cached_result = cached(cache_key)
+    if cached_result is not None:
+        return IncidentSummary(**cached_result)
+
     with db_lock:
         incidents = [to_incident(document) for document in incidents_table.all()]
     summary = IncidentSummary(
@@ -99,6 +106,7 @@ def summarize_incidents() -> IncidentSummary:
         summary.by_category[incident.category] += 1
         summary.by_origin[incident.origin] += 1
         summary.by_branch[incident.branch] += 1
+    store(cache_key, summary.model_dump(mode="json"))
     return summary
 
 
@@ -128,4 +136,5 @@ def update_incident_status(incident_id: IncidentId, payload: IncidentStatusUpdat
         incidents_table.update(
             validated.model_dump(mode="json", exclude={"id"}), doc_ids=[incident_id],
         )
+    invalidate("incidents:summary")
     return validated
