@@ -7,6 +7,7 @@ import { removeToken } from "@/src/services/api";
 const LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/suppliers", label: "Proveedores" },
+  { href: "/inventory/products", label: "Inventario" },
 ];
 
 export function AppNav() {
