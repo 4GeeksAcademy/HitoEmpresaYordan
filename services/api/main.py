@@ -2,6 +2,7 @@ import io
 import logging
 import re
 import sys
+import time
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -45,6 +46,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def timing_middleware(request: Request, call_next):
+    """Mide la duración en ms de cada petición y la escribe en los logs."""
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed_ms = (time.perf_counter() - start) * 1000
+    method = request.method
+    path = request.url.path
+    status = response.status_code
+    logger.info(
+        "TIMING  %s %s %d  (%.1f ms)", method, path, status, elapsed_ms,
+    )
+    return response
+
+
 app.include_router(suppliers_router)
 app.include_router(incidents_router)
 app.include_router(records_router)
