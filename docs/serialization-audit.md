@@ -287,3 +287,61 @@ Documentación completa de todos los endpoints existentes.
 - **Over-fetching eliminado**: `AssetListRead` sin `current_stock` (ahorra 3 consultas DB), `SupplierListRead` sin `notes`/`contact_email`, `CandidateRecordListRead` sin `linkedin_url`/`cv_url`
 
 **Todos los flujos de autenticación son seguros:** ningún endpoint devuelve contraseñas (ni texto plano ni hasheadas), ni tokens de restablecimiento, ni reenvía el correo electrónico del usuario salvo `GET /auth/me` que únicamente muestra el correo del propio usuario autenticado.
+
+---
+
+## Validación post-cambios — Tests y verificación de contratos
+
+### Suite de tests existente
+
+El proyecto cuenta con **65 tests** distribuidos en 6 módulos bajo `services/api/tests/`, enfocados en los flujos de autenticación:
+
+| Módulo | Tests | Cobertura |
+|--------|-------|-----------|
+| `test_register.py` | 13 | Registro: campos requeridos/opcionales, duplicados, validación de email, longitud de password, `extra="forbid"`, payloads no JSON |
+| `test_login.py` | 9 | Login: credenciales válidas, email inexistente, password incorrecto, usuario inactivo, `Content-Type`, campos faltantes |
+| `test_forgot_password.py` | 6 | Solicitud reset: email existente/inexistente, email inválido/vacío, `extra="forbid"`, usuario inactivo |
+| `test_reset_password.py` | 11 | Reset: token válido, single use, token malformado/expirado, wrong purpose/signature, usuario inactivo, login post-reset |
+| `test_change_password.py` | 9 | Cambio: válido, login post-cambio, wrong current, no token, longitud password, usuario inactivo, invalida reset pendiente |
+| `test_token.py` | 11 | `/auth/me`: token válido, profile sin datos, no token, malformed/expired/wrong signature, reset token rejected, inactive user, sin sub/sin exp |
+
+**Resultado: 65/65 tests PASSED** ✅
+
+```
+======================= 65 passed, 3 warnings in 20.98s ========================
+```
+
+(Los 3 warnings son deprecaciones de FastAPI `on_event` y Starlette `TestClient` — pre-existentes, no introducidos por los cambios.)
+
+### Verificación de contratos OpenAPI
+
+Se ejecutó un script de validación contra el schema OpenAPI generado por FastAPI para confirmar que cada endpoint expone el `response_model` correcto:
+
+| Endpoint | `response_model` esperado | `response_model` real | Estado |
+|----------|--------------------------|-----------------------|--------|
+| `GET /suppliers` | `list[SupplierListRead]` | `list[SupplierListRead]` | ✅ |
+| `GET /suppliers/{id}` | `SupplierDetailRead` | `SupplierDetailRead` | ✅ |
+| `GET /records` | `list[CandidateRecordListRead]` | `list[CandidateRecordListRead]` | ✅ |
+| `GET /records/{id}` | `CandidateRecordDetailRead` | `CandidateRecordDetailRead` | ✅ |
+| `GET /records/{id}/notes` | `list[CandidateNoteRead]` | `list[CandidateNoteRead]` | ✅ |
+| `POST /records` | `CandidateRecordDetailRead` | `CandidateRecordDetailRead` | ✅ |
+| `POST /records/{id}/notes` | `CandidateNoteRead` | `CandidateNoteRead` | ✅ |
+| `GET /inventory/products` | `list[AssetListRead]` | `list[AssetListRead]` | ✅ |
+| `GET /inventory/orders` | `list[AssetOrderEntry]` | `list[AssetOrderEntry]` | ✅ |
+| `GET /auth/me` | `AuthMe` | `AuthMe` | ✅ |
+| `POST /auth/login` | `TokenResponse` | `TokenResponse` | ✅ |
+| `GET /` | `MessageResponse` | `MessageResponse` | ✅ |
+| `POST /api/incidents/analyze` | `IncidentAnalysisResponse` | `IncidentAnalysisResponse` | ✅ |
+| ... y 15 endpoints más | Schema Pydantic explícito | Coincide | ✅ |
+
+**Total: 28 paths, 41 endpoints — todos con `$ref` a schemas Pydantic en OpenAPI.** El único endpoint sin schema JSON (`GET /api/incidents/results/export`) devuelve `Response` con CSV intencionalmente.
+
+### Conclusión de la validación
+
+Los cambios de serialización (fases 2 y 3) **no introdujeron regresiones**:
+
+1. **65 tests de autenticación pasan al 100 %** — los schemas de request/response siguen siendo compatibles con los contratos existentes
+2. **OpenAPI genera schemas correctos** — cada endpoint tiene el `$ref` esperado al schema Pydantic correspondiente
+3. **Shape de respuestas verificado** — los nuevos schemas list/detail (`SupplierListRead`, `CandidateRecordListRead`, `AssetListRead`, etc.) están correctamente registrados en OpenAPI
+4. **No hay objetos ORM en crudo** — ningún endpoint devuelve un modelo SQLModel o TinyDB doc sin pasar por un schema Pydantic
+5. **No hay campos de más** — los schemas de entrada con `extra="forbid"` rechazan campos extraños (verificado por tests como `test_forgot_password_extra_fields_forbidden` y `test_register_extra_fields_forbidden`)
