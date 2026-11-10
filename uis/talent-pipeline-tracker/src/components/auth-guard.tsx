@@ -27,13 +27,14 @@ export function AuthGuard({ children }: Readonly<{ children: React.ReactNode }>)
   useEffect(() => {
     if (isPublicRoute) return;
 
-    if (!hasValidSession) {
-      if (accessToken) clearAccessToken();
+    const currentToken = getAccessTokenSnapshot();
+    if (!isAccessTokenValid(currentToken)) {
+      if (currentToken) clearAccessToken();
       router.replace("/login");
       return;
     }
 
-    const expiration = getAccessTokenExpiration(accessToken);
+    const expiration = getAccessTokenExpiration(currentToken);
     if (expiration === null) {
       clearAccessToken();
       router.replace("/login");
@@ -46,7 +47,7 @@ export function AuthGuard({ children }: Readonly<{ children: React.ReactNode }>)
     }, Math.max(expiration - Date.now(), 0));
 
     return () => window.clearTimeout(timeoutId);
-  }, [accessToken, hasValidSession, isPublicRoute, router]);
+  }, [accessToken, isPublicRoute, router]);
 
   if (isPublicRoute || hasValidSession) return children;
 

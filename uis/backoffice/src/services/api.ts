@@ -6,6 +6,7 @@ import type {
 } from "@/src/types/supplier";
 
 const API_BASE = "/api";
+const TOKEN_KEY = "auth_token";
 
 export class ApiError extends Error {
   status: number;
@@ -62,11 +63,21 @@ function responseObject(value: unknown): Record<string, unknown> | null {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getToken();
+  if (!token) {
+    if (typeof window !== "undefined") window.location.replace("/login");
+    throw new ApiError("Inicia sesión para continuar.", 401);
+  }
+
   let response: Response;
   try {
     response = await fetch(`${API_BASE}${path}`, {
       ...init,
-      headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(init?.headers ?? {}),
+      },
     });
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") throw error;
@@ -75,16 +86,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (response.status === 204) return undefined as T;
 
-  const body = responseObject(await readResponseBody(response));
+  const body = await readResponseBody(response);
   if (!response.ok) {
-    throw new ApiError(formatDetail(body?.detail, response.status), response.status);
+    if (response.status === 401) {
+      removeToken();
+      if (typeof window !== "undefined") window.location.replace("/login");
+    }
+    throw new ApiError(formatDetail(responseObject(body)?.detail, response.status), response.status);
   }
   return body as T;
 }
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem("access_token");
+  return window.localStorage.getItem("access_token") ?? window.localStorage.getItem(TOKEN_KEY);
 }
 
 export async function login(email: string, password: string): Promise<void> {
@@ -111,6 +126,14 @@ export async function login(email: string, password: string): Promise<void> {
   }
 
   window.localStorage.setItem("access_token", accessToken);
+  window.localStorage.setItem(TOKEN_KEY, accessToken);
+  window.dispatchEvent(new Event("nexova:auth-change"));
+}
+
+export function removeToken(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem("access_token");
+  window.localStorage.removeItem(TOKEN_KEY);
   window.dispatchEvent(new Event("nexova:auth-change"));
 }
 

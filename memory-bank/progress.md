@@ -1,6 +1,18 @@
 # Estado y próximos pasos
 
-Actualizado: 2026-11-09.
+Actualizado: 2026-11-10.
+
+## Integracion de los PR 6, 7, 8 y 9
+
+- Las cuatro ramas forman una cadena de commits; la integracion conserva ese historial y el commit `356cf0a8` de recuperacion de candidaturas, sin squash ni rebase.
+- Se combinan los endpoints de analisis y exportacion CSV de main con autenticacion, proveedores, candidaturas, notas y gestion centralizada de incidencias.
+- La portada conserva NexovaDashboard. Se conserva tambien TrackFlowDashboard, adaptado al callback de reintento actual, sin sustituir la portada ni sus estilos.
+- El cliente del backoffice conserva listas de proveedores y compatibilidad con ambas claves de sesion. El cliente de candidaturas acepta estados actuales y alias historicos.
+- Se corrige una redireccion prematura al login durante la hidratacion de AuthGuard cuando existe una sesion valida persistida.
+- Validaciones correctas: tipos de las tres UIs, lint del website y de los archivos afectados, builds de las tres UIs y comprobaciones HTTP de registro, login, perfil, proveedores, incidencias, CSV, candidaturas, notas y recuperacion de contrasena.
+- Playwright verifica login, rutas protegidas, imagenes y ausencia de errores JavaScript y desbordamiento horizontal en escritorio y movil en backoffice, Talent Pipeline Tracker y website.
+- Las comprobaciones usan datos ficticios en un worktree temporal; el tracker externo y el envio de correo se simulan. No se modifican las bases de datos reales ni archivos de entorno. La integracion no constituye una validacion del despliegue ni de los servicios externos reales.
+- Siguiente paso: publicar la resolucion verificada e integrar mediante merge commit a main; confirmar que los cuatro PR quedan integrados y que main conserva todos sus commits.
 
 ## Contexto del proyecto
 

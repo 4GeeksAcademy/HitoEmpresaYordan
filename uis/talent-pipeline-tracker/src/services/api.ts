@@ -131,12 +131,22 @@ function mapStatusFromApi(value?: unknown): CandidateStatus {
   switch (typeof value === "string" ? value.toLowerCase() : undefined) {
     case "received":
     case "pending":
+    case "applied":
+    case "new":
       return "aplicado";
     case "in_progress":
+    case "in-progress":
+    case "interview":
+    case "review":
       return "en-proceso";
     case "selected":
+    case "hired":
+    case "accepted":
+    case "closed_won":
       return "contratado";
     case "discarded":
+    case "rejected":
+    case "closed_lost":
       return "rechazado";
     default:
       return "aplicado";
@@ -155,10 +165,23 @@ function mapStatusToApi(value: CandidateStatus): string {
 function mapStageFromApi(value?: unknown): CandidateStage {
   switch (typeof value === "string" ? value.toLowerCase() : undefined) {
     case "pending": return "screening";
+    case "screening": return "screening";
     case "review": return "revision";
+    case "hr_interview":
+    case "interview_rrhh":
+    case "entrevista-rrhh":
     case "personal_interview": return "entrevista-rrhh";
+    case "tech_interview":
+    case "entrevista-tecnica":
     case "technical_interview": return "entrevista-tecnica";
+    case "final_interview":
+    case "entrevista-final": return "entrevista-final";
+    case "offer":
+    case "oferta":
     case "offer_presented": return "oferta";
+    case "hired": return "hired";
+    case "discarded":
+    case "descartado": return "descartado";
     default: return "screening";
   }
 }

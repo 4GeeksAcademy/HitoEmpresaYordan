@@ -1,0 +1,23 @@
+Metric,Value
+Total records,100
+Valid records,96
+Invalid records,4
+Missing client_company,1
+Invalid or missing category,1
+Invalid or missing email,1
+"Closed ticket, no score",1
+Valid records by category: TECHNICAL,28
+Valid records by category: BILLING,18
+Valid records by category: ACCESS,21
+Valid records by category: HR_QUERY,17
+Valid records by category: COMPLAINT,12
+Valid records by status: OPEN,27
+Valid records by status: CLOSED,56
+Valid records by status: DISCARDED,13
+Satisfaction Index (closed tickets),56 of 56
+Average satisfaction score,3.84 / 5.00
+Satisfaction score 1,2
+Satisfaction score 2,5
+Satisfaction score 3,10
+Satisfaction score 4,22
+Satisfaction score 5,17

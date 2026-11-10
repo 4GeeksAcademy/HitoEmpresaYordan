@@ -2,6 +2,8 @@
 .venv/
 __pycache__/
 services/api/.env
+.env
+data/db.json
 
 # Base de datos local de TinyDB (se regenera con `uv run seed`)
 services/api/data/
@@ -9,3 +11,7 @@ services/api/data/
 # Node / Next.js
 node_modules/
 .next/
+dist/
+build/
+*.node
+.DS_Store
