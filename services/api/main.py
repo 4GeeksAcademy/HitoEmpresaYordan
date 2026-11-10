@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from auth import router as auth_router
+from models import IncidentAnalysisResponse, MessageResponse
 from profiles import router as profiles_router
 from routes.incidents import router as incidents_router
 from routes.records import router as records_router
@@ -103,9 +104,9 @@ async def handle_unexpected_error(request: Request, call_next):
         )
 
 
-@app.get("/")
-def welcome() -> dict[str, str]:
-	return {"message": "Bienvenido a la API de Nexova"}
+@app.get("/", response_model=MessageResponse)
+def welcome() -> MessageResponse:
+    return MessageResponse(message="Bienvenido a la API de Nexova")
 
 
 def _safe_upload_filename(filename: Optional[str]) -> str:
@@ -115,7 +116,7 @@ def _safe_upload_filename(filename: Optional[str]) -> str:
     return re.sub(r"[\r\n\t]", "_", basename)
 
 
-@app.post("/api/incidents/analyze")
+@app.post("/api/incidents/analyze", response_model=IncidentAnalysisResponse)
 async def analyze_incidents(file: UploadFile = File(...)):
     global latest_metrics
     content = await file.read()

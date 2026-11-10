@@ -9,13 +9,13 @@
 
 | # | Ruta | Método | Propósito | ¿Usa `response_model`? | Tipo retornado | Estado |
 |---|------|--------|-----------|------------------------|----------------|--------|
-| 1 | `/` | GET | Bienvenida / health‑check | ❌ No | `dict[str, str]` | ❌ Sin serializar |
-| 2 | `/api/incidents/analyze` | POST | Analizar CSV de incidencias | ❌ No | `IncidentSummary` (Pydantic) ✅ pero sin `response_model` explícito | ⚠️ Parcialmente serializado |
+| 1 | `/` | GET | Bienvenida / health‑check | ✅ `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
+| 2 | `/api/incidents/analyze` | POST | Analizar CSV de incidencias | ✅ `IncidentAnalysisResponse` | `IncidentAnalysisResponse` (Pydantic) | ✅ Ya serializado |
 | 3 | `/api/incidents/results/export` | GET | Exportar resultados a CSV | ❌ No | `Response` (FastAPI raw) | ✅ Ya serializado¹ |
 | 4 | `/auth/login` | POST | Iniciar sesión | ✅ `TokenResponse` | `TokenResponse` | ✅ Ya serializado |
-| 5 | `/auth/forgot-password` | POST | Solicitar restablecimiento de contraseña | ❌ No | `dict[str, str]` | ❌ Sin serializar |
-| 6 | `/auth/reset-password` | POST | Restablecer contraseña con token | ❌ No | `dict[str, str]` | ❌ Sin serializar |
-| 7 | `/auth/change-password` | POST | Cambiar contraseña (autenticado) | ❌ No | `dict[str, str]` | ❌ Sin serializar |
+| 5 | `/auth/forgot-password` | POST | Solicitar restablecimiento de contraseña | ✅ `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
+| 6 | `/auth/reset-password` | POST | Restablecer contraseña con token | ✅ `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
+| 7 | `/auth/change-password` | POST | Cambiar contraseña (autenticado) | ✅ `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
 | 8 | `/auth/me` | GET | Leer perfil propio | ✅ `AuthMe` | `AuthMe` (Pydantic, excluye `hashed_password`) | ✅ Ya serializado |
 | 9 | `/users` | POST | Registrar usuario (público) | ✅ `UserRead` | `UserRead` (Pydantic, sin password) | ✅ Ya serializado |
 | 10 | `/users` | GET | Listar usuarios (admin) | ✅ `list[UserRead]` | `list[UserRead]` | ✅ Ya serializado |
@@ -59,9 +59,9 @@
 
 | Estado | Cantidad | Endpoints |
 |--------|----------|-----------|
-| ✅ Ya serializado | 36 | La gran mayoría usan `response_model` y devuelven schemas Pydantic |
-| ⚠️ Parcialmente serializado | 1 | `POST /api/incidents/analyze` devuelve un Pydantic `IncidentSummary` pero sin `response_model` en el decorador |
-| ❌ Sin serializar | 4 | `GET /`, `POST /auth/forgot-password`, `POST /auth/reset-password`, `POST /auth/change-password` |
+| ✅ Ya serializado | 40 | El 97.6 % de los endpoints usan `response_model` y devuelven schemas Pydantic |
+| ⚠️ Parcialmente serializado | 0 | — |
+| ❌ Sin serializar | 1 | `GET /api/incidents/results/export` — devuelve `Response` (CSV), correcto por naturaleza |
 
 ---
 
@@ -77,29 +77,32 @@ def login(...) -> TokenResponse:
 ```
 **Seguro.** No expone `hashed_password` ni información del usuario. Devuelve solo `access_token` y `token_type`.
 
-#### ❌ `POST /auth/forgot-password` — Sin response_model
+#### ✅ `POST /auth/forgot-password` — Ahora con `response_model=MessageResponse`
 ```python
-@router.post("/forgot-password")
-def forgot_password(...) -> dict[str, str]:
-    return {"message": "Si la cuenta existe, recibiras un enlace..."}
+@router.post("/forgot-password", response_model=MessageResponse)
+def forgot_password(...) -> MessageResponse:
+    background_tasks.add_task(request_password_reset, payload.email)
+    return MessageResponse(...)
 ```
-**Riesgo bajo.** No expone datos sensibles, pero carece de schema de respuesta. Debería usar un Pydantic `MessageResponse`.
+**Seguro.** No expone el email, ni token, ni información del usuario. Solo devuelve un mensaje genérico. El envío de email ocurre en background task.
 
-#### ❌ `POST /auth/reset-password` — Sin response_model
+#### ✅ `POST /auth/reset-password` — Ahora con `response_model=MessageResponse`
 ```python
-@router.post("/reset-password")
-def reset_password(...) -> dict[str, str]:
-    return {"message": "Contrasena restablecida"}
+@router.post("/reset-password", response_model=MessageResponse)
+def reset_password(...) -> MessageResponse:
+    ...
+    return MessageResponse(message="Contrasena restablecida")
 ```
-**Riesgo bajo.** Ídem anterior. Debería usar un schema tipado.
+**Seguro.** No devuelve la nueva contraseña ni el token. Solo confirma la operación.
 
-#### ❌ `POST /auth/change-password` — Sin response_model
+#### ✅ `POST /auth/change-password` — Ahora con `response_model=MessageResponse`
 ```python
-@router.post("/change-password")
-def change_password(...) -> dict[str, str]:
-    return {"message": "Contrasena actualizada"}
+@router.post("/change-password", response_model=MessageResponse)
+def change_password(...) -> MessageResponse:
+    ...
+    return MessageResponse(message="Contrasena actualizada")
 ```
-**Riesgo bajo.** Ídem.
+**Seguro.** El payload de entrada recibe `current_password` y `new_password` (request schema), pero la respuesta es solo un mensaje de confirmación. No se reenvían contraseñas en ningún sentido.
 
 #### ✅ `GET /auth/me` — `response_model=AuthMe`
 ```python
@@ -128,10 +131,10 @@ Ambos endpoints (`GET /me`, `PUT /me`) usan `response_model=Profile` y `Profile`
 
 ### 4. Rutas de incidencias (`/api/incidents`)
 
-Todos los endpoints menos el `analyze` usan `response_model` con schemas Pydantic (`Incident`, `IncidentSummary`). **Bien serializados.** 
+Todos los endpoints usan `response_model` con schemas Pydantic (`Incident`, `IncidentSummary`, `IncidentAnalysisResponse`). **100% serializados.** 
 
-#### ⚠️ `POST /api/incidents/analyze` 
-Devuelve `IncidentSummary` (Pydantic válido) pero **sin `response_model`**. FastAPI inferirá el tipo del return annotation, pero carece de la validación explícita en el decorador. **Bajo riesgo, pero inconsistente.**
+#### ✅ `POST /api/incidents/analyze` — Corregido con `response_model=IncidentAnalysisResponse`
+Se creó el schema `IncidentAnalysisResponse` en `models.py` para tipar explícitamente la respuesta del análisis de CSV. Ahora el decorador declara `response_model=IncidentAnalysisResponse` y FastAPI validará la estructura en runtime.
 
 ### 5. Rutas de proveedores (`/suppliers`)
 
@@ -148,13 +151,13 @@ Todos los endpoints usan `response_model` con schemas Pydantic (`AssetRead`, `As
 
 ### 8. Endpoints globales (`/`)
 
-#### ❌ `GET /` — Sin response_model
+#### ✅ `GET /` — Corregido con `response_model=MessageResponse`
 ```python
-@app.get("/")
-def welcome() -> dict[str, str]:
-    return {"message": "Bienvenido a la API de Nexova"}
+@app.get("/", response_model=MessageResponse)
+def welcome() -> MessageResponse:
+    return MessageResponse(message="Bienvenido a la API de Nexova")
 ```
-**Riesgo bajo.** Endpoint meramente informativo. Debería usar schema por consistencia.
+**Ahora serializado.** Mensaje de bienvenida tipado con el schema compartido `MessageResponse`.
 
 ---
 
@@ -170,39 +173,56 @@ def welcome() -> dict[str, str]:
 
 ---
 
-## Recomendaciones
+## Recomendaciones — Estado actual tras la corrección
 
-### Prioridad alta
+Todas las correcciones de prioridad alta y el ⚠️ parcial han sido completadas en esta iteración:
 
-1. **Añadir `response_model=MessageResponse` a los 4 endpoints sin serializar**
-   - Crear schema: `class MessageResponse(BaseModel): message: str`
-   - Aplicar a: `GET /`, `POST /forgot-password`, `POST /reset-password`, `POST /change-password`
+| # | Acción | Estado |
+|---|--------|--------|
+| 1 | Crear `MessageResponse` en `models.py` | ✅ Completado |
+| 2 | `GET /` → `response_model=MessageResponse` | ✅ Completado |
+| 3 | `POST /auth/forgot-password` → `response_model=MessageResponse` | ✅ Completado |
+| 4 | `POST /auth/reset-password` → `response_model=MessageResponse` | ✅ Completado |
+| 5 | `POST /auth/change-password` → `response_model=MessageResponse` | ✅ Completado |
+| 6 | `POST /api/incidents/analyze` → crear `IncidentAnalysisResponse` y usar `response_model` | ✅ Completado |
 
-2. **Añadir `response_model=IncidentSummary` al endpoint `POST /api/incidents/analyze`**  
-   ```python
-   @app.post("/api/incidents/analyze", response_model=IncidentSummary)
-   ```
+### Prioridades restantes (media/baja)
 
-### Prioridad media
+| Prioridad | Acción |
+|-----------|--------|
+| Media | Revisar `CandidateRecord` con `extra="allow"` — aunque es intencional, documentar por qué |
+| Media | Verificar que `UserUpdate` con `role` opcional no permita auto-asignación de ADMIN (ya controlado en `users.py`) |
+| Baja | Documentar que `GET /api/incidents/results/export` devuelve `Response` (CSV) intencionalmente |
+| Baja | Crear tests de serialización que verifiquen que ningún endpoint devuelva objetos ORM en crudo |
 
-3. **Revisar `CandidateRecord` con `extra="allow"`** — Aunque es intencional para el tracker externo, conviene documentar por qué se permite y qué campos externos pueden aparecer.
+### Separación de esquemas request/response
 
-4. **Verificar que `UserUpdate` con `role` opcional** no permita que un usuario se auto-asigne rol ADMIN (en `users.py` ya está controlado: solo admin cambia roles).
+Se ha mantenido una separación estricta entre esquemas de entrada y salida:
 
-### Prioridad baja
+- **Request schemas** (entrada): `UserCreate`, `ForgotPasswordRequest`, `ResetPasswordRequest`, `ChangePasswordRequest` — todos con `extra="forbid"` para rechazar campos extraños.
+- **Response schemas** (salida): `MessageResponse`, `TokenResponse`, `AuthMe`, `UserRead` — ninguno contiene campos de contraseña.
+- Los schemas de entrada **no se reutilizan** como respuesta. La respuesta es siempre un schema diferente adaptado a lo que el cliente necesita ver.
 
-5. **Documentar `response_model` en el endpoint de exportación CSV** — Aunque `Response` no requiere schema, añadir un comentario/explicación en la función evitaría confusiones futuras.
+### Seguridad en flujos de autenticación
 
-6. **Crear tests de serialización** para verificar que ningún endpoint devuelva objetos ORM en crudo (ej. mediante middleware de test que inspeccione `response.body`).
+| Flujo | ¿Devuelve password? | ¿Devuelve hash? | ¿Devuelve token? | Seguro |
+|-------|---------------------|------------------|-------------------|--------|
+| `POST /auth/login` | ❌ No | ❌ No | ✅ access_token (necesario) | ✅ |
+| `POST /auth/forgot-password` | ❌ No | ❌ No | ❌ No (solo mensaje) | ✅ |
+| `POST /auth/reset-password` | ❌ No | ❌ No | ❌ No (solo mensaje) | ✅ |
+| `POST /auth/change-password` | ❌ No | ❌ No | ❌ No (solo mensaje) | ✅ |
+| `GET /auth/me` | ❌ No | ❌ No | ❌ No | ✅ — solo email, role, profile |
 
 ---
 
 ## Cobertura general
 
 ```
-✅ Ya serializados:      36 / 41  (87.8 %)
-⚠️ Parcialmente:          1 / 41  ( 2.4 %)
-❌ Sin serializar:        4 / 41  ( 9.8 %)
+✅ Ya serializados:      40 / 41  (97.6 %)
+⚠️ Parcialmente:          0 / 41  ( 0.0 %)
+❌ Sin serializar:        1 / 41  ( 2.4 %)*
 ```
 
-**Conclusión:** El backend de Nexova tiene una **excelente higiene de serialización**. El 87.8 % de los endpoints están correctamente serializados con `response_model` y schemas Pydantic. Ningún endpoint expone `hashed_password` ni datos sensibles indebidos. Los 4 endpoints sin serializar son triviales (mensajes de texto planos) y añadir un schema `MessageResponse` los resolvería en minutos.
+_* El único endpoint sin `response_model` es `GET /api/incidents/results/export` que devuelve `Response` con CSV — es correcto por su naturaleza._
+
+**Conclusión:** El backend de Nexova ha pasado del 87.8 % al **97.6 % de endpoints serializados**. Se crearon dos nuevos schemas (`MessageResponse` e `IncidentAnalysisResponse`) y se actualizaron 5 decoradores de rutas. Todos los flujos de autenticación son seguros: ningún endpoint devuelve contraseñas (ni texto plano ni hasheadas), ni tokens de restablecimiento, ni reenvía el correo electrónico del usuario salvo `GET /auth/me` que únicamente muestra el correo del propio usuario autenticado.

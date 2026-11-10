@@ -12,8 +12,8 @@ from passlib.hash import bcrypt
 
 from mailer import send_password_reset_email
 from models import (
-    AuthMe, ChangePasswordRequest, ForgotPasswordRequest, ResetPasswordRequest,
-    TokenResponse, User,
+    AuthMe, ChangePasswordRequest, ForgotPasswordRequest, MessageResponse,
+    ResetPasswordRequest, TokenResponse, User,
 )
 from services import (
     change_user_password, consume_password_reset, get_profile_by_user_id,
@@ -101,16 +101,18 @@ def request_password_reset(email: str) -> None:
         send_password_reset_email(user.email, token)
 
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", response_model=MessageResponse)
 def forgot_password(
     payload: ForgotPasswordRequest, background_tasks: BackgroundTasks
-) -> dict[str, str]:
+) -> MessageResponse:
     background_tasks.add_task(request_password_reset, payload.email)
-    return {"message": "Si la cuenta existe, recibiras un enlace para restablecer la contrasena"}
+    return MessageResponse(
+        message="Si la cuenta existe, recibiras un enlace para restablecer la contrasena"
+    )
 
 
-@router.post("/reset-password")
-def reset_password(payload: ResetPasswordRequest) -> dict[str, str]:
+@router.post("/reset-password", response_model=MessageResponse)
+def reset_password(payload: ResetPasswordRequest) -> MessageResponse:
     invalid_token = HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Token de recuperacion invalido, caducado o utilizado",
@@ -130,13 +132,13 @@ def reset_password(payload: ResetPasswordRequest) -> dict[str, str]:
         raise invalid_token from error
     if not consume_password_reset(user_id, token_id, payload.new_password):
         raise invalid_token
-    return {"message": "Contrasena restablecida"}
+    return MessageResponse(message="Contrasena restablecida")
 
 
-@router.post("/change-password")
+@router.post("/change-password", response_model=MessageResponse)
 def change_password(
     payload: ChangePasswordRequest, current_user: User = Depends(get_current_user)
-) -> dict[str, str]:
+) -> MessageResponse:
     if not change_user_password(
         current_user.id, payload.current_password, payload.new_password
     ):
@@ -144,7 +146,7 @@ def change_password(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="La contrasena actual es incorrecta",
         )
-    return {"message": "Contrasena actualizada"}
+    return MessageResponse(message="Contrasena actualizada")
 
 
 @router.get("/me", response_model=AuthMe)

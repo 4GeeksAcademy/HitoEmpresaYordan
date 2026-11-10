@@ -302,6 +302,38 @@ class AuthMe(UserRead):
     profile: Optional[Profile] = None
 
 
+class MessageResponse(BaseModel):
+    """Respuesta genérica con un mensaje descriptivo."""
+
+    message: str = Field(..., examples=["Operación completada correctamente"])
+
+
+class IncidentAnalysisResponse(BaseModel):
+    """Respuesta del análisis de CSV de incidencias (POST /api/incidents/analyze)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    total_records: int
+    valid_records: int
+    invalid_records: int
+    invalid_breakdown: dict[str, int] = Field(
+        default_factory=dict,
+        description="Desglose de motivos de invalidez (encoding, corrupted, incomplete, unknown)",
+    )
+    breakdown_by_category: dict[str, int] = Field(
+        default_factory=dict,
+        description="Conteo por categoría (technical, billing, account, feature_request, other)",
+    )
+    breakdown_by_status: dict[str, int] = Field(
+        default_factory=dict,
+        description="Conteo por estado (OPEN, IN_PROGRESS, CLOSED)",
+    )
+    satisfaction_index: dict[str, object] = Field(
+        default_factory=dict,
+        description="Índice de satisfacción (scored_closed_tickets, closed_tickets, average, score_distribution)",
+    )
+
+
 # ──────────────────────────────────────────────
 # SQLModel ORM — Inventario (Supabase / PostgreSQL)
 # ──────────────────────────────────────────────
