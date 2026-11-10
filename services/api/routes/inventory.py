@@ -18,6 +18,7 @@ from schemas import (
     AssetEntryRead,
     AssetExitCreate,
     AssetExitRead,
+    AssetListRead,
     AssetOrderEntry,
     AssetRead,
 )
@@ -73,11 +74,11 @@ def _get_asset_or_404(db: Session, asset_id: int) -> Asset:
 # ──────────────────────────────────────────────
 
 
-@router.get("/products", response_model=List[AssetRead])
+@router.get("/products", response_model=List[AssetListRead])
 def list_products(db: Session = Depends(get_db)):
-    """Lista todos los activos con su current_stock calculado dinámicamente."""
+    """Lista todos los activos (sin stock calculado para evitar over-fetching)."""
     assets = db.exec(select(Asset)).all()
-    return [_asset_to_read(asset, db) for asset in assets]
+    return [AssetListRead.model_validate(asset) for asset in assets]
 
 
 @router.post("/products", response_model=AssetRead, status_code=status.HTTP_201_CREATED)
@@ -208,15 +209,14 @@ def list_orders(db: Session = Depends(get_db)):
                 id=entry_row.id,
                 order_type="entry",
                 asset_id=entry_row.asset_id,
+                asset_name=asset_name,
+                asset_sku=asset_sku,
                 quantity=entry_row.quantity,
                 office=entry_row.office,
                 created_at=entry_row.created_at,
-                user_uuid=entry_row.user_uuid,
                 supplier=entry_row.supplier,
                 exit_type=None,
                 assigned_to=None,
-                asset_name=asset_name,
-                asset_sku=asset_sku,
             )
         )
 
@@ -226,15 +226,14 @@ def list_orders(db: Session = Depends(get_db)):
                 id=exit_row.id,
                 order_type="exit",
                 asset_id=exit_row.asset_id,
+                asset_name=asset_name,
+                asset_sku=asset_sku,
                 quantity=exit_row.quantity,
                 office=exit_row.office,
                 created_at=exit_row.created_at,
-                user_uuid=exit_row.user_uuid,
                 supplier=None,
                 exit_type=exit_row.exit_type,
                 assigned_to=exit_row.assigned_to,
-                asset_name=asset_name,
-                asset_sku=asset_sku,
             )
         )
 

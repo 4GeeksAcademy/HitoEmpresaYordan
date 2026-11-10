@@ -50,8 +50,20 @@ class AssetUpdate(BaseModel):
     office: Optional[str] = Field(None, min_length=1, max_length=50)
 
 
+class AssetListRead(BaseModel):
+    """Schema ligero para listado de activos (GET /inventory/products). Sin stock calculado."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: int
+    name: str
+    sku: str
+    category: str
+    office: str
+
+
 class AssetRead(BaseModel):
-    """Schema de response para un activo. Incluye current_stock calculado."""
+    """Schema completo de response para detalle de un activo (GET /inventory/products/{id})."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -185,9 +197,13 @@ class AssetExitRead(BaseModel):
 
 
 class AssetOrderEntry(BaseModel):
-    """Representa una fila individual dentro de la lista combinada de órdenes."""
+    """Representa una fila individual dentro de la lista combinada de órdenes.
 
-    model_config = ConfigDict(from_attributes=True)
+    La respuesta es una vista desnormalizada que incluye datos del activo
+    (name, sku) para que el frontend no tenga que hacer llamadas adicionales.
+    """
+
+    model_config = ConfigDict(extra="forbid")
 
     id: int
     order_type: str = Field(
@@ -195,9 +211,14 @@ class AssetOrderEntry(BaseModel):
         description='"entry" para AssetEntry, "exit" para AssetExit',
     )
     asset_id: int
+    asset_name: str = Field(..., description="Nombre del activo (desnormalizado)")
+    asset_sku: str = Field(..., description="SKU del activo (desnormalizado)")
     quantity: int
     office: str
     created_at: datetime
+    supplier: Optional[str] = Field(None, description="Proveedor (solo entrada)")
+    exit_type: Optional[str] = Field(None, description='"allocation" o "consumption" (solo salida)')
+    assigned_to: Optional[str] = Field(None, description="Empleado asignado (solo salida)")
     user_uuid: str
     # Campos específicos de entrada
     supplier: Optional[str] = None

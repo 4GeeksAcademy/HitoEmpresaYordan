@@ -125,7 +125,33 @@ class CandidateRecordCreate(CandidateRecordFields):
     model_config = ConfigDict(extra="forbid")
 
 
+class CandidateRecordListRead(BaseModel):
+    """Schema ligero para listado de candidaturas. Sin linkedin_url, cv_url ni notas."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str | int
+    full_name: str
+    email: str
+    phone: str
+    position: str
+    experience_years: float
+    status: str
+    stage: str
+    applied_at: datetime
+    external_id: Optional[str] = None
+
+
+class CandidateRecordDetailRead(CandidateRecordListRead):
+    """Schema completo para detalle de candidatura. Incluye URLs opcionales."""
+
+    linkedin_url: Optional[str] = ""
+    cv_url: Optional[str] = ""
+
+
 class CandidateRecord(CandidateRecordFields):
+    """Modelo completo ORM para almacenamiento en tracker externo. Extra permitido."""
+
     model_config = ConfigDict(extra="allow")
 
     id: str | int
@@ -154,7 +180,21 @@ class CandidateNoteCreate(BaseModel):
     created_by: Optional[str] = Field(None, max_length=254)
 
 
+class CandidateNoteRead(BaseModel):
+    """Schema de response para notas de candidatura. Sin external_id ni record_id interno."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str | int
+    content: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    created_by: Optional[str] = None
+
+
 class CandidateNote(BaseModel):
+    """Modelo completo ORM para nota en tracker externo. Extra permitido."""
+
     model_config = ConfigDict(extra="allow")
 
     id: str | int
@@ -166,7 +206,32 @@ class CandidateNote(BaseModel):
     external_id: Optional[str] = None
 
 
+class SupplierListRead(BaseModel):
+    """Schema ligero para listado de proveedores (GET /suppliers)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: int
+    name: str
+    country: Country
+    categories: List[SupplierCategory]
+    monthly_rate: float
+    currency: Currency
+    status: SupplierStatus
+    contract_renewal_date: Optional[date] = None
+
+
+class SupplierDetailRead(SupplierListRead):
+    """Schema completo para detalle de un proveedor (GET /suppliers/{id})."""
+
+    contact_email: Optional[str] = None
+    notes: Optional[str] = None
+    updated_at: datetime
+
+
 class Supplier(SupplierBase):
+    """Modelo completo ORM para almacenamiento en TinyDB."""
+
     model_config = ConfigDict(use_enum_values=True)
 
     id: int

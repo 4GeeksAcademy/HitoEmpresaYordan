@@ -11,6 +11,8 @@ from models import (
     Supplier,
     SupplierCategory,
     SupplierCreate,
+    SupplierDetailRead,
+    SupplierListRead,
     SupplierRateUpdate,
     SupplierStatusUpdate,
     utc_now,
@@ -33,23 +35,24 @@ def get_or_404(supplier_id: int) -> Document:
     return doc
 
 
-@router.post("", response_model=Supplier, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=SupplierDetailRead, status_code=status.HTTP_201_CREATED)
 def create_supplier(
     payload: SupplierCreate,
     current_user: dict = Depends(get_current_user),
-) -> Supplier:
+) -> SupplierDetailRead:
     data = {**payload.model_dump(mode="json"), "updated_at": utc_now().isoformat()}
     with db_lock:
         supplier_id = suppliers_table.insert(data)
-    return Supplier(id=supplier_id, **data)
+    supplier = Supplier(id=supplier_id, **data)
+    return SupplierDetailRead.model_validate(supplier)
 
 
-@router.get("", response_model=List[Supplier])
+@router.get("", response_model=List[SupplierListRead])
 def list_suppliers(
     country: Optional[Country] = None,
     category: Optional[SupplierCategory] = None,
     current_user: dict = Depends(get_current_user),
-) -> List[Supplier]:
+) -> List[SupplierListRead]:
     q = Query()
     conditions = []
     if country is not None:
@@ -65,25 +68,26 @@ def list_suppliers(
             docs = suppliers_table.search(cond)
         else:
             docs = suppliers_table.all()
-    return [to_supplier(doc) for doc in docs]
+    return [SupplierListRead.model_validate(to_supplier(doc)) for doc in docs]
 
 
-@router.get("/{supplier_id}", response_model=Supplier)
+@router.get("/{supplier_id}", response_model=SupplierDetailRead)
 def get_supplier(
     supplier_id: int,
     current_user: dict = Depends(get_current_user),
-) -> Supplier:
+) -> SupplierDetailRead:
     with db_lock:
         doc = get_or_404(supplier_id)
-    return to_supplier(doc)
+    supplier = to_supplier(doc)
+    return SupplierDetailRead.model_validate(supplier)
 
 
-@router.patch("/{supplier_id}/rate", response_model=Supplier)
+@router.patch("/{supplier_id}/rate", response_model=SupplierDetailRead)
 def update_rate(
     supplier_id: int,
     payload: SupplierRateUpdate,
     current_user: dict = Depends(get_current_user),
-) -> Supplier:
+) -> SupplierDetailRead:
     with db_lock:
         get_or_404(supplier_id)
         suppliers_table.update(
@@ -91,21 +95,21 @@ def update_rate(
             doc_ids=[supplier_id],
         )
         doc = suppliers_table.get(doc_id=supplier_id)
-    return to_supplier(doc)
+    return SupplierDetailRead.model_validate(to_supplier(doc))
 
 
-@router.patch("/{supplier_id}/status", response_model=Supplier)
+@router.patch("/{supplier_id}/status", response_model=SupplierDetailRead)
 def update_status(
     supplier_id: int,
     payload: SupplierStatusUpdate,
     current_user: dict = Depends(get_current_user),
-) -> Supplier:
+) -> SupplierDetailRead:
     # Según el BRIEFING, updated_at solo refleja cambios de tarifa
     with db_lock:
         get_or_404(supplier_id)
         suppliers_table.update({"status": payload.status.value}, doc_ids=[supplier_id])
         doc = suppliers_table.get(doc_id=supplier_id)
-    return to_supplier(doc)
+    return SupplierDetailRead.model_validate(to_supplier(doc))
 
 
 @router.delete("/{supplier_id}", status_code=status.HTTP_204_NO_CONTENT)

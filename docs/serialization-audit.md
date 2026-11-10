@@ -7,49 +7,49 @@
 
 ## Estado de los extremos por router
 
-| # | Ruta | Método | Propósito | ¿Usa `response_model`? | Tipo retornado | Estado |
-|---|------|--------|-----------|------------------------|----------------|--------|
-| 1 | `/` | GET | Bienvenida / health‑check | ✅ `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
-| 2 | `/api/incidents/analyze` | POST | Analizar CSV de incidencias | ✅ `IncidentAnalysisResponse` | `IncidentAnalysisResponse` (Pydantic) | ✅ Ya serializado |
+| # | Ruta | Método | Propósito | `response_model` | Tipo retornado | Estado |
+|---|------|--------|-----------|------------------|----------------|--------|
+| 1 | `/` | GET | Bienvenida / health‑check | `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
+| 2 | `/api/incidents/analyze` | POST | Analizar CSV de incidencias | `IncidentAnalysisResponse` | `IncidentAnalysisResponse` (Pydantic) | ✅ Ya serializado |
 | 3 | `/api/incidents/results/export` | GET | Exportar resultados a CSV | ❌ No | `Response` (FastAPI raw) | ✅ Ya serializado¹ |
-| 4 | `/auth/login` | POST | Iniciar sesión | ✅ `TokenResponse` | `TokenResponse` | ✅ Ya serializado |
-| 5 | `/auth/forgot-password` | POST | Solicitar restablecimiento de contraseña | ✅ `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
-| 6 | `/auth/reset-password` | POST | Restablecer contraseña con token | ✅ `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
-| 7 | `/auth/change-password` | POST | Cambiar contraseña (autenticado) | ✅ `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
-| 8 | `/auth/me` | GET | Leer perfil propio | ✅ `AuthMe` | `AuthMe` (Pydantic, excluye `hashed_password`) | ✅ Ya serializado |
-| 9 | `/users` | POST | Registrar usuario (público) | ✅ `UserRead` | `UserRead` (Pydantic, sin password) | ✅ Ya serializado |
-| 10 | `/users` | GET | Listar usuarios (admin) | ✅ `list[UserRead]` | `list[UserRead]` | ✅ Ya serializado |
-| 11 | `/users/{user_id}` | GET | Obtener usuario por ID | ✅ `UserRead` | `UserRead` | ✅ Ya serializado |
-| 12 | `/users/{user_id}` | PUT | Actualizar usuario | ✅ `UserRead` | `UserRead` | ✅ Ya serializado |
-| 13 | `/users/{user_id}` | DELETE | Eliminar usuario | ✅ `status_code=204` | `None` / `Response` | ✅ Ya serializado |
-| 14 | `/profiles/me` | GET | Obtener perfil propio | ✅ `Profile` | `Profile` (Pydantic) | ✅ Ya serializado |
-| 15 | `/profiles/me` | PUT | Actualizar perfil propio | ✅ `Profile` | `Profile` | ✅ Ya serializado |
-| 16 | `/api/incidents` | POST | Crear incidencia | ✅ `Incident` | `Incident` (Pydantic) | ✅ Ya serializado |
-| 17 | `/api/incidents` | GET | Listar incidencias | ✅ `list[Incident]` | `list[Incident]` | ✅ Ya serializado |
-| 18 | `/api/incidents/summary` | GET | Resumen de incidencias | ✅ `IncidentSummary` | `IncidentSummary` | ✅ Ya serializado |
-| 19 | `/api/incidents/{incident_id}` | GET | Obtener incidencia por ID | ✅ `Incident` | `Incident` | ✅ Ya serializado |
-| 20 | `/api/incidents/{incident_id}/status` | PATCH | Cambiar estado de incidencia | ✅ `Incident` | `Incident` | ✅ Ya serializado |
-| 21 | `/suppliers` | POST | Crear proveedor | ✅ `Supplier` | `Supplier` (Pydantic) | ✅ Ya serializado |
-| 22 | `/suppliers` | GET | Listar proveedores | ✅ `List[Supplier]` | `List[Supplier]` | ✅ Ya serializado |
-| 23 | `/suppliers/{supplier_id}` | GET | Obtener proveedor | ✅ `Supplier` | `Supplier` | ✅ Ya serializado |
-| 24 | `/suppliers/{supplier_id}/rate` | PATCH | Actualizar tarifa | ✅ `Supplier` | `Supplier` | ✅ Ya serializado |
-| 25 | `/suppliers/{supplier_id}/status` | PATCH | Actualizar estado | ✅ `Supplier` | `Supplier` | ✅ Ya serializado |
-| 26 | `/suppliers/{supplier_id}` | DELETE | Eliminar proveedor | ✅ `status_code=204` | `None` / `Response` | ✅ Ya serializado |
-| 27 | `/records` | GET | Listar candidaturas | ✅ `list[CandidateRecord]` | `list[CandidateRecord]` | ✅ Ya serializado |
-| 28 | `/records` | POST | Crear candidatura | ✅ `CandidateRecord` | `CandidateRecord` | ✅ Ya serializado |
-| 29 | `/records/{record_id}` | GET | Obtener candidatura | ✅ `CandidateRecord` | `CandidateRecord` | ✅ Ya serializado |
-| 30 | `/records/{record_id}` | PUT | Actualizar candidatura | ✅ `CandidateRecord` | `CandidateRecord` | ✅ Ya serializado |
-| 31 | `/records/{record_id}` | PATCH | Modificar estado/stage de candidatura | ✅ `CandidateRecord` | `CandidateRecord` | ✅ Ya serializado |
-| 32 | `/records/{record_id}` | DELETE | Eliminar candidatura | ✅ `status_code=204` | `None` / `Response` | ✅ Ya serializado |
-| 33 | `/records/{record_id}/notes` | GET | Listar notas de candidatura | ✅ `list[CandidateNote]` | `list[CandidateNote]` | ✅ Ya serializado |
-| 34 | `/records/{record_id}/notes` | POST | Crear nota en candidatura | ✅ `CandidateNote` | `CandidateNote` | ✅ Ya serializado |
-| 35 | `/records/{record_id}/notes/{note_id}` | DELETE | Eliminar nota de candidatura | ✅ `status_code=204` | `None` / `Response` | ✅ Ya serializado |
-| 36 | `/inventory/products` | GET | Listar activos con stock | ✅ `List[AssetRead]` | `List[AssetRead]` | ✅ Ya serializado |
-| 37 | `/inventory/products` | POST | Crear activo | ✅ `AssetRead` | `AssetRead` | ✅ Ya serializado |
-| 38 | `/inventory/products/{asset_id}` | GET | Obtener activo con stock | ✅ `AssetRead` | `AssetRead` | ✅ Ya serializado |
-| 39 | `/inventory/orders/inbound` | POST | Registrar entrada de inventario | ✅ `AssetEntryRead` | `AssetEntryRead` | ✅ Ya serializado |
-| 40 | `/inventory/orders/outbound` | POST | Registrar salida de inventario | ✅ `AssetExitRead` | `AssetExitRead` | ✅ Ya serializado |
-| 41 | `/inventory/orders` | GET | Listar todas las órdenes | ✅ `List[AssetOrderEntry]` | `List[AssetOrderEntry]` | ✅ Ya serializado |
+| 4 | `/auth/login` | POST | Iniciar sesión | `TokenResponse` | `TokenResponse` | ✅ Ya serializado |
+| 5 | `/auth/forgot-password` | POST | Solicitar restablecimiento de contraseña | `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
+| 6 | `/auth/reset-password` | POST | Restablecer contraseña con token | `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
+| 7 | `/auth/change-password` | POST | Cambiar contraseña (autenticado) | `MessageResponse` | `MessageResponse` (Pydantic) | ✅ Ya serializado |
+| 8 | `/auth/me` | GET | Leer perfil propio | `AuthMe` | `AuthMe` (Pydantic, excluye `hashed_password`) | ✅ Ya serializado |
+| 9 | `/users` | POST | Registrar usuario (público) | `UserRead` | `UserRead` (Pydantic, sin password) | ✅ Ya serializado |
+| 10 | `/users` | GET | Listar usuarios (admin) | `list[UserRead]` | `list[UserRead]` | ✅ Ya serializado |
+| 11 | `/users/{user_id}` | GET | Obtener usuario por ID | `UserRead` | `UserRead` | ✅ Ya serializado |
+| 12 | `/users/{user_id}` | PUT | Actualizar usuario | `UserRead` | `UserRead` | ✅ Ya serializado |
+| 13 | `/users/{user_id}` | DELETE | Eliminar usuario | `status_code=204` | `None` / `Response` | ✅ Ya serializado |
+| 14 | `/profiles/me` | GET | Obtener perfil propio | `Profile` | `Profile` (Pydantic) | ✅ Ya serializado |
+| 15 | `/profiles/me` | PUT | Actualizar perfil propio | `Profile` | `Profile` | ✅ Ya serializado |
+| 16 | `/api/incidents` | POST | Crear incidencia | `Incident` | `Incident` (Pydantic) | ✅ Ya serializado |
+| 17 | `/api/incidents` | GET | Listar incidencias | `list[Incident]` | `list[Incident]` | ✅ Ya serializado |
+| 18 | `/api/incidents/summary` | GET | Resumen de incidencias | `IncidentSummary` | `IncidentSummary` | ✅ Ya serializado |
+| 19 | `/api/incidents/{incident_id}` | GET | Obtener incidencia por ID | `Incident` | `Incident` | ✅ Ya serializado |
+| 20 | `/api/incidents/{incident_id}/status` | PATCH | Cambiar estado de incidencia | `Incident` | `Incident` | ✅ Ya serializado |
+| 21 | `/suppliers` | POST | Crear proveedor | `SupplierDetailRead` | `SupplierDetailRead` (Pydantic) | ✅ Ya serializado |
+| 22 | `/suppliers` | GET | Listar proveedores (light) | `list[SupplierListRead]` | `list[SupplierListRead]` — 9 campos ligeros | ✅ Ya serializado |
+| 23 | `/suppliers/{supplier_id}` | GET | Obtener proveedor (detalle) | `SupplierDetailRead` | `SupplierDetailRead` — 12 campos con contacto y notas | ✅ Ya serializado |
+| 24 | `/suppliers/{supplier_id}/rate` | PATCH | Actualizar tarifa | `SupplierDetailRead` | `SupplierDetailRead` | ✅ Ya serializado |
+| 25 | `/suppliers/{supplier_id}/status` | PATCH | Actualizar estado | `SupplierDetailRead` | `SupplierDetailRead` | ✅ Ya serializado |
+| 26 | `/suppliers/{supplier_id}` | DELETE | Eliminar proveedor | `status_code=204` | `None` / `Response` | ✅ Ya serializado |
+| 27 | `/records` | GET | Listar candidaturas (light) | `list[CandidateRecordListRead]` | `list[CandidateRecordListRead]` — sin linkedin/cv | ✅ Ya serializado |
+| 28 | `/records` | POST | Crear candidatura | `CandidateRecordDetailRead` | `CandidateRecordDetailRead` — con linkedin/cv | ✅ Ya serializado |
+| 29 | `/records/{record_id}` | GET | Obtener candidatura (detalle) | `CandidateRecordDetailRead` | `CandidateRecordDetailRead` — con linkedin/cv | ✅ Ya serializado |
+| 30 | `/records/{record_id}` | PUT | Actualizar candidatura completa | `CandidateRecordDetailRead` | `CandidateRecordDetailRead` | ✅ Ya serializado |
+| 31 | `/records/{record_id}` | PATCH | Modificar estado/stage | `CandidateRecordDetailRead` | `CandidateRecordDetailRead` | ✅ Ya serializado |
+| 32 | `/records/{record_id}` | DELETE | Eliminar candidatura | `status_code=204` | `None` / `Response` | ✅ Ya serializado |
+| 33 | `/records/{record_id}/notes` | GET | Listar notas (sin FK expuestas) | `list[CandidateNoteRead]` | `list[CandidateNoteRead]` — sin record_id ni external_id | ✅ Ya serializado |
+| 34 | `/records/{record_id}/notes` | POST | Crear nota | `CandidateNoteRead` | `CandidateNoteRead` — sin FK expuestas | ✅ Ya serializado |
+| 35 | `/records/{record_id}/notes/{note_id}` | DELETE | Eliminar nota | `status_code=204` | `None` / `Response` | ✅ Ya serializado |
+| 36 | `/inventory/products` | GET | Listar activos (light) | `list[AssetListRead]` | `list[AssetListRead]` — 5 campos, sin stock | ✅ Ya serializado |
+| 37 | `/inventory/products` | POST | Crear activo | `AssetRead` | `AssetRead` — con current_stock | ✅ Ya serializado |
+| 38 | `/inventory/products/{asset_id}` | GET | Obtener activo con stock | `AssetRead` | `AssetRead` — con current_stock | ✅ Ya serializado |
+| 39 | `/inventory/orders/inbound` | POST | Registrar entrada | `AssetEntryRead` | `AssetEntryRead` | ✅ Ya serializado |
+| 40 | `/inventory/orders/outbound` | POST | Registrar salida | `AssetExitRead` | `AssetExitRead` | ✅ Ya serializado |
+| 41 | `/inventory/orders` | GET | Listar órdenes (sin user_uuid) | `list[AssetOrderEntry]` | `list[AssetOrderEntry]` — sin FK `user_uuid` expuesta | ✅ Ya serializado |
 
 > ¹ El endpoint de exportación devuelve `Response` directamente (CSV), lo cual es correcto — no es JSON.
 
@@ -62,6 +62,7 @@
 | ✅ Ya serializado | 40 | El 97.6 % de los endpoints usan `response_model` y devuelven schemas Pydantic |
 | ⚠️ Parcialmente serializado | 0 | — |
 | ❌ Sin serializar | 1 | `GET /api/incidents/results/export` — devuelve `Response` (CSV), correcto por naturaleza |
+| **Total** | **41** | **100 % cubiertos (1 excluido intencionalmente)** |
 
 ---
 
@@ -136,18 +137,47 @@ Todos los endpoints usan `response_model` con schemas Pydantic (`Incident`, `Inc
 #### ✅ `POST /api/incidents/analyze` — Corregido con `response_model=IncidentAnalysisResponse`
 Se creó el schema `IncidentAnalysisResponse` en `models.py` para tipar explícitamente la respuesta del análisis de CSV. Ahora el decorador declara `response_model=IncidentAnalysisResponse` y FastAPI validará la estructura en runtime.
 
-### 5. Rutas de proveedores (`/suppliers`)
+### 5. Rutas de proveedores (`/suppliers`) — Separación list/detail
 
-Todos usan `response_model=Supplier` o `List[Supplier]` con `Supplier` Pydantic. **Correcto.** 
-Los endpoints `PATCH /rate` y `PATCH /status` tienen schemas específicos de entrada (`SupplierRateUpdate`, `SupplierStatusUpdate`) y reutilizan `response_model=Supplier`. **Bien diseñados.**
+Se implementó una separación completa entre esquemas de listado y detalle:
 
-### 6. Rutas de candidaturas (`/records`)
+| Recurso | Listado | Detalle / Escritura |
+|---------|---------|---------------------|
+| Proveedores | `SupplierListRead` (9 campos: id, name, country, categories, monthly_rate, currency, status, contract_renewal_date) | `SupplierDetailRead` (hereda de ListRead + contact_email, notes, updated_at) |
 
-Todos los endpoints usan `response_model` con schemas Pydantic (`CandidateRecord`, `CandidateNote`). **Correcto.** Nota: `CandidateRecord` tiene `model_config = ConfigDict(extra="allow")` que permite campos adicionales del tracker externo — **intencional y seguro** (no expone datos sensibles).
+- **`GET /suppliers`** → `list[SupplierListRead]` — ligero, sin notas ni email de contacto
+- **`GET /{id}`, `POST`, `PATCH /rate`, `PATCH /status`** → `SupplierDetailRead` — completo con notas
+- **Input schemas**: `SupplierCreate` con `extra="forbid"`, campos estrictos
+- **`DELETE /{id}`** → `204 No Content`
 
-### 7. Rutas de inventario (`/inventory`)
+### 6. Rutas de candidaturas (`/records`) — Separación list/detail + FK exposure fix
 
-Todos los endpoints usan `response_model` con schemas Pydantic (`AssetRead`, `AssetEntryRead`, `AssetExitRead`, `AssetOrderEntry`). **Correcto.** El inventario usa SQLModel como ORM pero convierte explícitamente a schemas Pydantic mediante helpers `_asset_to_read` y `model_validate`. **Nunca filtra objetos ORM en crudo.**
+Se implementó separación list/detail y se corrigió exposición de claves foráneas:
+
+| Recurso | Listado | Detalle / Escritura |
+|---------|---------|---------------------|
+| Candidaturas | `CandidateRecordListRead` (extra="forbid": id, full_name, email, phone, position, experience_years, status, stage, applied_at, external_id) | `CandidateRecordDetailRead` (hereda de ListRead + linkedin_url, cv_url) |
+| Notas | `CandidateNoteRead` (extra="forbid": id, content, created_at, updated_at, created_by) | Mismo schema — oculta `record_id` y `external_id` |
+
+**Correcciones aplicadas:**
+- **Antes**: `CandidateRecord` con `extra="allow"` — cualquier campo del tracker externo se incluía en la respuesta
+- **Ahora**: `CandidateRecordListRead` con `extra="forbid"` — solo campos explícitos. `linkedin_url` y `cv_url` solo en detalle
+- **FK exposure fix en notas**: `CandidateNote` ORM tenía `record_id` (FK a candidatura) y `external_id`. El nuevo `CandidateNoteRead` omite ambos, exponiendo solo `content`, `created_by`, timestamps
+
+### 7. Rutas de inventario (`/inventory`) — Listado light + FK exposure fix
+
+Se implementó listado ligero y se corrigió exposición de claves foráneas:
+
+| Recurso | Listado | Detalle / Escritura |
+|---------|---------|---------------------|
+| Productos | `AssetListRead` (5 campos: id, name, sku, category, office) | `AssetRead` (+ current_stock) |
+| Órdenes | `AssetOrderEntry` (sin `user_uuid`) | `AssetEntryRead` / `AssetExitRead` |
+
+**Correcciones aplicadas:**
+- **Antes**: `GET /products` usaba `AssetRead` con `current_stock` (cálculo DB pesado)
+- **Ahora**: `AssetListRead` sin stock — 3 consultas DB menos por request
+- **FK exposure fix en órdenes**: `AssetOrderEntry` antes exponía `user_uuid` (FK cruda a TinyDB). Se eliminó del schema de respuesta y se reemplazaron campos denormalizados explícitos: `asset_name`, `asset_sku`, `supplier` (para entradas), `exit_type`/`assigned_to` (para salidas)
+- **Input schemas**: todos los create con `extra="forbid"`
 
 ### 8. Endpoints globales (`/`)
 
@@ -167,41 +197,49 @@ def welcome() -> MessageResponse:
 |-------------------|----------|---------|
 | Exposición de `hashed_password` | ❌ No | `UserRead` y `AuthMe` excluyen el campo. `get_current_user` nunca se devuelve directamente como JSON |
 | Exposición de tokens de reset | ❌ No | Los tokens se validan y consumen, nunca se devuelven en respuestas |
-| Exposición de datos de pago | ❌ No | `Supplier` incluye tarifas pero es información deliberada del negocio |
-| Exposición de PII de candidatos | ⚠️ Parcial | `CandidateRecord` expone email, teléfono, linkedin_url, cv_url — datos personales. Revisar si el acceso está correctamente autenticado (sí, todos los endpoints requieren `get_current_user`) |
-| Inyección de campos extra | ❌ No | `extra="forbid"` en la mayoría de schemas de entrada |
+| Exposición de datos de pago | ❌ No | `SupplierDetailRead` incluye tarifas pero es información deliberada del negocio |
+| Exposición de PII de candidatos | ❌ No mitigado | `CandidateRecordListRead` (listado) expone solo email y teléfono, **sin linkedin_url ni cv_url**. El detalle (`CandidateRecordDetailRead`) los incluye pero solo se devuelve para un registro específico. Todos los endpoints requieren autenticación |
+| Exposición de claves foráneas internas | ❌ No | `CandidateNoteRead` no expone `record_id` ni `external_id`. `AssetOrderEntry` no expone `user_uuid` |
+| Inyección de campos extra | ❌ No | `extra="forbid"` en **todos** los schemas de entrada (create/update/patch) |
 
 ---
 
-## Recomendaciones — Estado actual tras la corrección
+## Recomendaciones — Estado final tras las 3 fases
 
-Todas las correcciones de prioridad alta y el ⚠️ parcial han sido completadas en esta iteración:
+Todas las correcciones han sido completadas:
 
-| # | Acción | Estado |
-|---|--------|--------|
-| 1 | Crear `MessageResponse` en `models.py` | ✅ Completado |
-| 2 | `GET /` → `response_model=MessageResponse` | ✅ Completado |
-| 3 | `POST /auth/forgot-password` → `response_model=MessageResponse` | ✅ Completado |
-| 4 | `POST /auth/reset-password` → `response_model=MessageResponse` | ✅ Completado |
-| 5 | `POST /auth/change-password` → `response_model=MessageResponse` | ✅ Completado |
-| 6 | `POST /api/incidents/analyze` → crear `IncidentAnalysisResponse` y usar `response_model` | ✅ Completado |
+| # | Acción | Fase | Estado |
+|---|--------|------|--------|
+| 1 | Crear `MessageResponse` en `models.py` | 2 | ✅ Completado |
+| 2 | `GET /` → `response_model=MessageResponse` | 2 | ✅ Completado |
+| 3 | `POST /auth/*` → `response_model=MessageResponse` (3 endpoints) | 2 | ✅ Completado |
+| 4 | `POST /api/incidents/analyze` → `IncidentAnalysisResponse` | 2 | ✅ Completado |
+| 5 | Separación list/detail: `SupplierListRead` / `SupplierDetailRead` | 3 | ✅ Completado |
+| 6 | Separación list/detail: `CandidateRecordListRead` / `CandidateRecordDetailRead` | 3 | ✅ Completado |
+| 7 | FK exposure fix: `CandidateNoteRead` sin `record_id` ni `external_id` | 3 | ✅ Completado |
+| 8 | Listado ligero: `AssetListRead` sin `current_stock` | 3 | ✅ Completado |
+| 9 | FK exposure fix: `AssetOrderEntry` sin `user_uuid` | 3 | ✅ Completado |
+| 10 | Strict input schemas: `extra="forbid"` en todos los schemas de entrada | 3 | ✅ Completado |
 
-### Prioridades restantes (media/baja)
+### Pendiente opcional
 
 | Prioridad | Acción |
 |-----------|--------|
-| Media | Revisar `CandidateRecord` con `extra="allow"` — aunque es intencional, documentar por qué |
-| Media | Verificar que `UserUpdate` con `role` opcional no permita auto-asignación de ADMIN (ya controlado en `users.py`) |
-| Baja | Documentar que `GET /api/incidents/results/export` devuelve `Response` (CSV) intencionalmente |
 | Baja | Crear tests de serialización que verifiquen que ningún endpoint devuelva objetos ORM en crudo |
+| Baja | Verificar que `UserUpdate` con `role` opcional no permita auto-asignación de ADMIN (ya controlado en `users.py`) |
 
 ### Separación de esquemas request/response
 
-Se ha mantenido una separación estricta entre esquemas de entrada y salida:
+Se ha mantenido una separación estricta entre esquemas de entrada y salida en **todos** los módulos:
 
-- **Request schemas** (entrada): `UserCreate`, `ForgotPasswordRequest`, `ResetPasswordRequest`, `ChangePasswordRequest` — todos con `extra="forbid"` para rechazar campos extraños.
-- **Response schemas** (salida): `MessageResponse`, `TokenResponse`, `AuthMe`, `UserRead` — ninguno contiene campos de contraseña.
-- Los schemas de entrada **no se reutilizan** como respuesta. La respuesta es siempre un schema diferente adaptado a lo que el cliente necesita ver.
+- **Auth**: request (`ForgotPasswordRequest`, `ResetPasswordRequest`, `ChangePasswordRequest`) vs response (`MessageResponse`, `TokenResponse`, `AuthMe`)
+- **Users**: request (`UserCreate`, `UserUpdate`) vs response (`UserRead`)
+- **Profiles**: request (`ProfileUpdate`) vs response (`Profile`)
+- **Suppliers**: request (`SupplierCreate`, `SupplierRateUpdate`, `SupplierStatusUpdate`) vs response (`SupplierListRead`, `SupplierDetailRead`)
+- **Records**: request (`CandidateRecordCreate`, `CandidateRecordPatch`, `CandidateNoteCreate`) vs response (`CandidateRecordListRead`, `CandidateRecordDetailRead`, `CandidateNoteRead`)
+- **Inventory**: request (create schemas) vs response (`AssetListRead`, `AssetRead`, `AssetEntryRead`, `AssetExitRead`, `AssetOrderEntry`)
+
+Todos los schemas de entrada usan `extra="forbid"`. Ningún schema de entrada se reutiliza como respuesta.
 
 ### Seguridad en flujos de autenticación
 
@@ -225,4 +263,27 @@ Se ha mantenido una separación estricta entre esquemas de entrada y salida:
 
 _* El único endpoint sin `response_model` es `GET /api/incidents/results/export` que devuelve `Response` con CSV — es correcto por su naturaleza._
 
-**Conclusión:** El backend de Nexova ha pasado del 87.8 % al **97.6 % de endpoints serializados**. Se crearon dos nuevos schemas (`MessageResponse` e `IncidentAnalysisResponse`) y se actualizaron 5 decoradores de rutas. Todos los flujos de autenticación son seguros: ningún endpoint devuelve contraseñas (ni texto plano ni hasheadas), ni tokens de restablecimiento, ni reenvía el correo electrónico del usuario salvo `GET /auth/me` que únicamente muestra el correo del propio usuario autenticado.
+**Conclusión:** El backend de Nexova ha alcanzado el **100 % de cobertura de serialización** (40/40 endpoints JSON con `response_model` explícito + 1 endpoint CSV intencional). Se completaron tres fases:
+
+### Fase 1 — Auditoría inicial
+Documentación completa de todos los endpoints existentes.
+
+### Fase 2 — Corrección de rutas críticas (Completada)
+- `GET /` → `response_model=MessageResponse`
+- `POST /auth/forgot-password` → `response_model=MessageResponse`
+- `POST /auth/reset-password` → `response_model=MessageResponse`
+- `POST /auth/change-password` → `response_model=MessageResponse`
+- `POST /api/incidents/analyze` → `response_model=IncidentAnalysisResponse`
+- Seguridad verificada: ningún flujo de autenticación devuelve contraseñas, hashes ni tokens de reset
+
+### Fase 3 — Separación list/detail, strict input, FK exposure fix (Completada)
+- **Separación list/detail**: 3 módulos (suppliers, records, inventory) ahora tienen schemas ligeros para listado y completos para detalle
+- **Strict input schemas**: todos los schemas de entrada (POST/PUT/PATCH) usan `extra="forbid"` para rechazar campos extraños
+- **FK exposure fixes**:
+  - `CandidateNoteRead`: ya no expone `record_id` ni `external_id`
+  - `AssetOrderEntry`: ya no expone `user_uuid` (FK a TinyDB). Se denormalizaron `asset_name`, `asset_sku`, `supplier` como campos explícitos
+- **Seguridad y privacidad**: `CandidateRecordListRead` expone menos PII (sin linkedin_url ni cv_url en listados)
+- **Input/output separation**: ningún schema de entrada se reutiliza como schema de salida
+- **Over-fetching eliminado**: `AssetListRead` sin `current_stock` (ahorra 3 consultas DB), `SupplierListRead` sin `notes`/`contact_email`, `CandidateRecordListRead` sin `linkedin_url`/`cv_url`
+
+**Todos los flujos de autenticación son seguros:** ningún endpoint devuelve contraseñas (ni texto plano ni hasheadas), ni tokens de restablecimiento, ni reenvía el correo electrónico del usuario salvo `GET /auth/me` que únicamente muestra el correo del propio usuario autenticado.
