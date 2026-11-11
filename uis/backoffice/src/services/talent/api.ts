@@ -192,8 +192,11 @@ function mapStageToApi(value: CandidateStage): string {
     case "revision": return "review";
     case "entrevista-rrhh": return "personal_interview";
     case "entrevista-tecnica": return "technical_interview";
+    case "entrevista-final": return "final_interview";
     case "oferta": return "offer_presented";
-    default: return "pending";
+    case "hired": return "hired";
+    case "descartado": return "discarded";
+    default: throw new Error(`Etapa de candidatura no reconocida: ${value}`);
   }
 }
 

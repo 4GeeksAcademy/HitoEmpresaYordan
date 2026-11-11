@@ -15,7 +15,10 @@ const stageOptions = [
   "revision",
   "entrevista-rrhh",
   "entrevista-tecnica",
+  "entrevista-final",
   "oferta",
+  "hired",
+  "descartado",
 ];
 
 export function FiltersBar({
