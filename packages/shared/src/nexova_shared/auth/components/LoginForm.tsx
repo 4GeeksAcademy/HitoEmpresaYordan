@@ -75,9 +75,9 @@ export function LoginForm({
   return (
     <div className={className}>
       {brandText && (
-        <p className="text-sm font-semibold text-slate-500">{brandText}</p>
+        <p className="text-sm font-semibold text-slate-400">{brandText}</p>
       )}
-      <h1 className="mt-2 text-2xl font-semibold">{title}</h1>
+      <h1 className="mt-2 text-2xl font-semibold text-white">{title}</h1>
       <form
         className="mt-6 grid gap-4"
         onSubmit={handleSubmit}
@@ -86,7 +86,7 @@ export function LoginForm({
         {error && (
           <p
             role="alert"
-            className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            className="rounded-xl border border-red-400/30 bg-red-900/30 p-3 text-sm text-red-300"
           >
             {error}
           </p>
@@ -95,7 +95,7 @@ export function LoginForm({
         <div>
           <label
             htmlFor="login-email"
-            className="mb-1 block text-sm font-medium"
+            className="mb-1 block text-sm font-medium text-slate-300"
           >
             {emailLabel}
           </label>
@@ -107,14 +107,14 @@ export function LoginForm({
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 focus-visible:outline-2 focus-visible:outline-slate-700"
+            className="w-full rounded-xl border border-white/20 bg-[#0A0E1F] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:border-cyan-400/60 focus:ring-cyan-400/20"
           />
         </div>
 
         <div>
           <label
             htmlFor="login-password"
-            className="mb-1 block text-sm font-medium"
+            className="mb-1 block text-sm font-medium text-slate-300"
           >
             {passwordLabel}
           </label>
@@ -126,24 +126,24 @@ export function LoginForm({
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 focus-visible:outline-2 focus-visible:outline-slate-700"
+            className="w-full rounded-xl border border-white/20 bg-[#0A0E1F] px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:border-cyan-400/60 focus:ring-cyan-400/20"
           />
         </div>
 
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-md bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+          className="w-full rounded-xl border border-cyan-200/80 bg-cyan-300/20 py-2.5 text-sm font-bold text-cyan-50 shadow-[0_0_22px_rgba(34,211,238,0.5)] transition hover:-translate-y-0.5 hover:bg-cyan-300/30 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? submittingLabel : submitLabel}
         </button>
 
         {registerHref && (
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-slate-400 mt-4">
             ¿No tienes cuenta?{" "}
             <a
               href={registerHref}
-              className="font-medium text-blue-600 hover:underline"
+              className="font-medium text-cyan-300 hover:underline"
             >
               Registrarse
             </a>

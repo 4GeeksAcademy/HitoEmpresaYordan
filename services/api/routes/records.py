@@ -4,11 +4,8 @@ from auth import get_current_user
 from models import (
     CandidateNote,
     CandidateNoteCreate,
-    CandidateNoteRead,
     CandidateRecord,
     CandidateRecordCreate,
-    CandidateRecordDetailRead,
-    CandidateRecordListRead,
     CandidateRecordPatch,
     User,
 )
@@ -54,42 +51,39 @@ def get_record_or_404(record_id: str) -> CandidateRecord:
     return record
 
 
-@router.get("", response_model=list[CandidateRecordListRead])
-def get_records(current_user: User = Depends(get_current_user)) -> list[CandidateRecordListRead]:
-    records = list_records()
-    return [CandidateRecordListRead.model_validate(r) for r in records]
+@router.get("", response_model=list[CandidateRecord])
+def get_records(current_user: User = Depends(get_current_user)) -> list[CandidateRecord]:
+    return list_records()
 
 
-@router.post("", response_model=CandidateRecordDetailRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=CandidateRecord, status_code=status.HTTP_201_CREATED)
 def post_record(
     payload: CandidateRecordCreate,
     current_user: User = Depends(get_current_user),
-) -> CandidateRecordDetailRead:
+) -> CandidateRecord:
     try:
-        record = create_record(payload)
-        return CandidateRecordDetailRead.model_validate(record)
+        return create_record(payload)
     except ExternalTrackerError as error:
         _raise_external_error(error)
 
 
-@router.get("/{record_id}", response_model=CandidateRecordDetailRead)
+@router.get("/{record_id}", response_model=CandidateRecord)
 def get_record_by_id(
     record_id: str,
     current_user: User = Depends(get_current_user),
-) -> CandidateRecordDetailRead:
+) -> CandidateRecord:
     try:
-        record = get_record_or_404(record_id)
-        return CandidateRecordDetailRead.model_validate(record)
+        return get_record_or_404(record_id)
     except ExternalTrackerError as error:
         _raise_external_error(error)
 
 
-@router.put("/{record_id}", response_model=CandidateRecordDetailRead)
+@router.put("/{record_id}", response_model=CandidateRecord)
 def put_record(
     record_id: str,
     payload: CandidateRecordCreate,
     current_user: User = Depends(get_current_user),
-) -> CandidateRecordDetailRead:
+) -> CandidateRecord:
     try:
         record = update_record(record_id, payload)
     except ExternalTrackerError as error:
@@ -99,15 +93,15 @@ def put_record(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidatura no encontrada",
         )
-    return CandidateRecordDetailRead.model_validate(record)
+    return record
 
 
-@router.patch("/{record_id}", response_model=CandidateRecordDetailRead)
+@router.patch("/{record_id}", response_model=CandidateRecord)
 def patch_record_by_id(
     record_id: str,
     payload: CandidateRecordPatch,
     current_user: User = Depends(get_current_user),
-) -> CandidateRecordDetailRead:
+) -> CandidateRecord:
     try:
         record = patch_record(record_id, payload)
     except ExternalTrackerError as error:
@@ -117,7 +111,7 @@ def patch_record_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidatura no encontrada",
         )
-    return CandidateRecordDetailRead.model_validate(record)
+    return record
 
 
 @router.delete("/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -137,11 +131,11 @@ def remove_record(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get("/{record_id}/notes", response_model=list[CandidateNoteRead])
+@router.get("/{record_id}/notes", response_model=list[CandidateNote])
 def get_record_notes(
     record_id: str,
     current_user: User = Depends(get_current_user),
-) -> list[CandidateNoteRead]:
+) -> list[CandidateNote]:
     try:
         notes = list_record_notes(record_id)
     except ExternalTrackerError as error:
@@ -151,19 +145,19 @@ def get_record_notes(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidatura no encontrada",
         )
-    return [CandidateNoteRead.model_validate(n) for n in notes]
+    return notes
 
 
 @router.post(
     "/{record_id}/notes",
-    response_model=CandidateNoteRead,
+    response_model=CandidateNote,
     status_code=status.HTTP_201_CREATED,
 )
 def post_record_note(
     record_id: str,
     payload: CandidateNoteCreate,
     current_user: User = Depends(get_current_user),
-) -> CandidateNoteRead:
+) -> CandidateNote:
     try:
         note = create_record_note(record_id, payload, current_user.email)
     except ExternalTrackerError as error:
@@ -173,7 +167,7 @@ def post_record_note(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidatura no encontrada",
         )
-    return CandidateNoteRead.model_validate(note)
+    return note
 
 
 @router.delete("/{record_id}/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -6,5 +6,9 @@ export const metadata: Metadata = {
 };
 
 export default function LoginPage() {
-  return <LoginForm />;
+  return (
+    <div className="fixed inset-0 bg-[#070B16]">
+      <LoginForm />
+    </div>
+  );
 }

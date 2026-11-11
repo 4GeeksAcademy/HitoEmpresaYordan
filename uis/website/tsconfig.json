@@ -28,10 +28,10 @@
     "./*"
       ],
       "@nexova/auth": [
-    "../../packages/shared/src/nexova_shared/auth/index.ts"
+    "./src/vendor/nexova_shared/auth/index.ts"
       ],
       "@nexova/auth/*": [
-    "../../packages/shared/src/nexova_shared/auth/*"
+    "./src/vendor/nexova_shared/auth/*"
       ]
     }
   },

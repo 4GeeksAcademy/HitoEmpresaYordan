@@ -18,13 +18,22 @@ export function SiteHeader() {
           <Link href={item.href} key={item.href}>{item.label}</Link>
         ))}
       </nav>
-      <Link className="header-cta" href="#tarifas">Calcular una tarifa <span aria-hidden="true">↗</span></Link>
+      <div className="flex items-center gap-3">
+        <Link
+          className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/20"
+          href="/login"
+        >
+          Iniciar sesión
+        </Link>
+        <Link className="header-cta" href="#tarifas">Calcular una tarifa <span aria-hidden="true">↗</span></Link>
+      </div>
       <details className="mobile-nav">
         <summary aria-label="Abrir menú de navegación">Menú</summary>
         <nav aria-label="Navegación móvil">
           {navigation.map((item) => (
             <Link href={item.href} key={item.href}>{item.label}</Link>
           ))}
+          <Link href="/login">Iniciar sesión</Link>
           <Link href="#tarifas">Calcular una tarifa</Link>
         </nav>
       </details>
