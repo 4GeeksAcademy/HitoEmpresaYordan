@@ -68,19 +68,20 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center">Create Account</h2>
+    <div className="w-full max-w-md mx-auto rounded-[2rem] border border-white/25 bg-white/10 p-7 text-white shadow-[0_18px_60px_rgba(2,6,23,0.55)] backdrop-blur-2xl">
+      <p className="text-sm font-semibold text-slate-400">Nexova Solutions</p>
+      <h2 className="text-2xl font-bold mt-2 mb-6">Crear cuenta</h2>
 
       {errors.general && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded">
+        <div className="mb-4 p-4 bg-red-900/30 border border-red-400/30 text-red-300 rounded-xl">
           {errors.general}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email <span className="text-red-500">*</span>
+          <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">
+            Correo electrónico <span className="text-red-400">*</span>
           </label>
           <input
             id="email"
@@ -89,19 +90,19 @@ export default function RegisterForm() {
             required
             value={formData.email}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+            className={`w-full px-4 py-2.5 rounded-xl border bg-[#0A0E1F] text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 ${
               errors.email
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-red-400/60 focus:ring-red-400/40'
+                : 'border-white/20 focus:border-cyan-400/60 focus:ring-cyan-400/20'
             }`}
-            placeholder="your@email.com"
+            placeholder="tu@correo.com"
           />
-          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Password <span className="text-red-500">*</span>
+          <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1">
+            Contraseña <span className="text-red-400">*</span>
           </label>
           <input
             id="password"
@@ -110,19 +111,19 @@ export default function RegisterForm() {
             required
             value={formData.password}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+            className={`w-full px-4 py-2.5 rounded-xl border bg-[#0A0E1F] text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 ${
               errors.password
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
+                ? 'border-red-400/60 focus:ring-red-400/40'
+                : 'border-white/20 focus:border-cyan-400/60 focus:ring-cyan-400/20'
             }`}
             placeholder="••••••••"
           />
-          {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+          {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password}</p>}
         </div>
 
         <div>
-          <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
-            First Name
+          <label htmlFor="first_name" className="block text-sm font-medium text-slate-300 mb-1">
+            Nombre
           </label>
           <input
             id="first_name"
@@ -130,14 +131,14 @@ export default function RegisterForm() {
             type="text"
             value={formData.first_name}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="John"
+            className="w-full px-4 py-2.5 rounded-xl border border-white/20 bg-[#0A0E1F] text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:border-cyan-400/60 focus:ring-cyan-400/20"
+            placeholder="Tu nombre"
           />
         </div>
 
         <div>
-          <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">
-            Last Name
+          <label htmlFor="last_name" className="block text-sm font-medium text-slate-300 mb-1">
+            Apellidos
           </label>
           <input
             id="last_name"
@@ -145,24 +146,24 @@ export default function RegisterForm() {
             type="text"
             value={formData.last_name}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Doe"
+            className="w-full px-4 py-2.5 rounded-xl border border-white/20 bg-[#0A0E1F] text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:border-cyan-400/60 focus:ring-cyan-400/20"
+            placeholder="Tus apellidos"
           />
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition"
+          className="w-full rounded-xl border border-cyan-200/80 bg-cyan-300/20 py-2.5 text-sm font-bold text-cyan-50 shadow-[0_0_22px_rgba(34,211,238,0.5)] transition hover:-translate-y-0.5 hover:bg-cyan-300/30 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Creating account...' : 'Create Account'}
+          {isLoading ? 'Creando cuenta…' : 'Crear cuenta'}
         </button>
       </form>
 
-      <div className="mt-4 text-center text-sm text-gray-600">
-        Already have an account?{' '}
-        <a href="/login" className="text-blue-600 hover:underline font-medium">
-          Sign in here
+      <div className="mt-6 text-center text-sm text-slate-400">
+        ¿Ya tienes cuenta?{' '}
+        <a href="/login" className="text-cyan-300 hover:underline font-medium">
+          Inicia sesión aquí
         </a>
       </div>
     </div>

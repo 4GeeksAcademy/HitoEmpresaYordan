@@ -1,48 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { removeToken } from "@/src/services/api";
 
-const LINKS = [
-  { href: "/", label: "Inicio" },
-  { href: "/suppliers", label: "Proveedores" },
-  { href: "/inventory/products", label: "Inventario" },
-];
-
 export function AppNav() {
-  const pathname = usePathname();
+  function handleLogout() {
+    removeToken();
+    window.location.replace("/login");
+  }
 
   return (
-    <aside className="border-b border-slate-200 bg-slate-900 text-slate-100 md:w-60 md:border-b-0 md:border-r">
-      <div className="px-6 py-5 text-lg font-semibold tracking-tight">Nexova Backoffice</div>
-      <nav className="flex gap-1 px-3 pb-4 md:flex-col">
-        {LINKS.map((link) => {
-          const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              aria-current={active ? "page" : undefined}
-              className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-                active ? "bg-slate-700 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              {link.label}
-            </Link>
-          );
-        })}
-      </nav>
-      <button
-        type="button"
-        onClick={() => {
-          removeToken();
-          window.location.replace("/login");
-        }}
-        className="mx-3 mb-4 rounded-md px-3 py-2 text-left text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white"
-      >
-        Cerrar sesión
-      </button>
-    </aside>
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-[#070B16]/95 px-4 backdrop-blur-md">
+      <span className="text-base font-extrabold tracking-tight text-white">
+        Nexova Backoffice
+      </span>
+      <div className="flex items-center gap-2">
+        <Link href="/account/profile" className="rounded-xl border border-cyan-200/60 bg-cyan-300/15 px-3 py-1.5 text-xs font-bold text-cyan-50">
+          Mi perfil
+        </Link>
+        <button type="button" onClick={handleLogout} className="rounded-xl border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-bold text-white">
+          Cerrar sesión
+        </button>
+      </div>
+    </header>
   );
 }

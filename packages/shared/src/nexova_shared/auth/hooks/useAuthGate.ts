@@ -18,8 +18,8 @@ function subscribe(onChange: () => void) {
 /**
  * Hook que sincroniza el estado del token con `useSyncExternalStore`
  * y redirige según la ruta actual:
- *   - Si hay token y estás en /login → redirige a "/"
- *   - Si NO hay token y NO estás en /login → redirige a "/login"
+ *   - Si hay token y estás en una ruta pública → redirige a "/"
+ *   - Si NO hay token y NO estás en una ruta pública → redirige a "/login"
  *
  * Devuelve el token actual (o null).
  */
@@ -29,7 +29,7 @@ export function useAuthGate(): {
 } {
   const pathname = usePathname();
   const router = useRouter();
-  const isLoginPage = pathname === "/login";
+  const isLoginPage = ["/login", "/register", "/forgot-password", "/reset-password"].includes(pathname);
 
   const token = useSyncExternalStore(subscribe, getToken, () => null);
 

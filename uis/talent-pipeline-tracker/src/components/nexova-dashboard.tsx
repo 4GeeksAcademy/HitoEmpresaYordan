@@ -1,23 +1,12 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CandidateList } from "@/src/components/candidate-list";
 import { FiltersBar } from "@/src/components/filters-bar";
+import { NewCandidateForm } from "@/src/components/new-candidate-form";
 import { IncidentSummaryPanel } from "@/src/components/incident-summary";
-
-const NewCandidateForm = dynamic(
-  () => import("@/src/components/new-candidate-form").then((mod) => mod.NewCandidateForm),
-  {
-    loading: () => (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
-        Cargando formulario…
-      </div>
-    ),
-  }
-);
 import { ApiError, createCandidate, getCandidates } from "@/src/services/api";
 import type { Candidate, CreateCandidateInput } from "@/src/types";
 import { logout } from "@/src/services/auth-session";
@@ -91,15 +80,12 @@ export function NexovaDashboard() {
     });
   }, [candidates, query, stage, status]);
 
-  const candidateMetrics = useMemo(
-    () => [
-      { label: "Total", value: candidates.length },
-      { label: "En proceso", value: candidates.filter((c) => c.estado === "en-proceso").length },
-      { label: "Contratadas", value: candidates.filter((c) => c.estado === "contratado").length },
-      { label: "Rechazadas", value: candidates.filter((c) => c.estado === "rechazado").length },
-    ],
-    [candidates]
-  );
+  const candidateMetrics = [
+    { label: "Total", value: candidates.length },
+    { label: "En proceso", value: candidates.filter((candidate) => candidate.estado === "en-proceso").length },
+    { label: "Contratadas", value: candidates.filter((candidate) => candidate.estado === "contratado").length },
+    { label: "Rechazadas", value: candidates.filter((candidate) => candidate.estado === "rechazado").length },
+  ];
 
   const handleCreateCandidate = useCallback(
     async (payload: CreateCandidateInput) => {
