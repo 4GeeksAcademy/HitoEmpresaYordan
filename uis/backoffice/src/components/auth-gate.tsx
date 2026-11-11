@@ -27,7 +27,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <AppNav />
-      <main className="flex-1 pt-14">{children}</main>
+      <main className="flex-1">{children}</main>
     </div>
   );
 }

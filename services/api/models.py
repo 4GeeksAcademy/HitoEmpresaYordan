@@ -3,6 +3,7 @@ from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from sqlmodel import Field as SQLField, SQLModel
 
 EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 
@@ -124,7 +125,33 @@ class CandidateRecordCreate(CandidateRecordFields):
     model_config = ConfigDict(extra="forbid")
 
 
+class CandidateRecordListRead(BaseModel):
+    """Schema ligero para listado de candidaturas. Sin linkedin_url, cv_url ni notas."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str | int
+    full_name: str
+    email: str
+    phone: str
+    position: str
+    experience_years: float
+    status: str
+    stage: str
+    applied_at: datetime
+    external_id: Optional[str] = None
+
+
+class CandidateRecordDetailRead(CandidateRecordListRead):
+    """Schema completo para detalle de candidatura. Incluye URLs opcionales."""
+
+    linkedin_url: Optional[str] = ""
+    cv_url: Optional[str] = ""
+
+
 class CandidateRecord(CandidateRecordFields):
+    """Modelo completo ORM para almacenamiento en tracker externo. Extra permitido."""
+
     model_config = ConfigDict(extra="allow")
 
     id: str | int
@@ -153,7 +180,21 @@ class CandidateNoteCreate(BaseModel):
     created_by: Optional[str] = Field(None, max_length=254)
 
 
+class CandidateNoteRead(BaseModel):
+    """Schema de response para notas de candidatura. Sin external_id ni record_id interno."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str | int
+    content: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    created_by: Optional[str] = None
+
+
 class CandidateNote(BaseModel):
+    """Modelo completo ORM para nota en tracker externo. Extra permitido."""
+
     model_config = ConfigDict(extra="allow")
 
     id: str | int
@@ -165,7 +206,32 @@ class CandidateNote(BaseModel):
     external_id: Optional[str] = None
 
 
+class SupplierListRead(BaseModel):
+    """Schema ligero para listado de proveedores (GET /suppliers)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: int
+    name: str
+    country: Country
+    categories: List[SupplierCategory]
+    monthly_rate: float
+    currency: Currency
+    status: SupplierStatus
+    contract_renewal_date: Optional[date] = None
+
+
+class SupplierDetailRead(SupplierListRead):
+    """Schema completo para detalle de un proveedor (GET /suppliers/{id})."""
+
+    contact_email: Optional[str] = None
+    notes: Optional[str] = None
+    updated_at: datetime
+
+
 class Supplier(SupplierBase):
+    """Modelo completo ORM para almacenamiento en TinyDB."""
+
     model_config = ConfigDict(use_enum_values=True)
 
     id: int
@@ -299,3 +365,81 @@ class ChangePasswordRequest(NewPasswordRequest):
 
 class AuthMe(UserRead):
     profile: Optional[Profile] = None
+
+
+class MessageResponse(BaseModel):
+    """Respuesta genérica con un mensaje descriptivo."""
+
+    message: str = Field(..., examples=["Operación completada correctamente"])
+
+
+class IncidentAnalysisResponse(BaseModel):
+    """Respuesta del análisis de CSV de incidencias (POST /api/incidents/analyze)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    total_records: int
+    valid_records: int
+    invalid_records: int
+    invalid_breakdown: dict[str, int] = Field(
+        default_factory=dict,
+        description="Desglose de motivos de invalidez (encoding, corrupted, incomplete, unknown)",
+    )
+    breakdown_by_category: dict[str, int] = Field(
+        default_factory=dict,
+        description="Conteo por categoría (technical, billing, account, feature_request, other)",
+    )
+    breakdown_by_status: dict[str, int] = Field(
+        default_factory=dict,
+        description="Conteo por estado (OPEN, IN_PROGRESS, CLOSED)",
+    )
+    satisfaction_index: dict[str, object] = Field(
+        default_factory=dict,
+        description="Índice de satisfacción (scored_closed_tickets, closed_tickets, average, score_distribution)",
+    )
+
+
+# ──────────────────────────────────────────────
+# SQLModel ORM — Inventario (Supabase / PostgreSQL)
+# ──────────────────────────────────────────────
+
+
+class Asset(SQLModel, table=True):
+    """Activo físico o material gestionado por Nexova (equivalente a Product)."""
+
+    __tablename__ = "assets"
+
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    name: str = SQLField(min_length=1, max_length=200)
+    sku: str = SQLField(unique=True, min_length=1, max_length=50, index=True)
+    category: str = SQLField(min_length=1, max_length=50)  # "hardware", "peripherals", "office_supplies", "training_materials"
+    office: str = SQLField(min_length=1, max_length=50)     # "Valencia" o "Miami"
+
+
+class AssetEntry(SQLModel, table=True):
+    """Entrada de inventario — compra o entrega recibida por Nexova (equivalente a InboundOrder)."""
+
+    __tablename__ = "asset_entries"
+
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    asset_id: int = SQLField(foreign_key="assets.id", index=True)
+    quantity: int = SQLField(ge=1)
+    supplier: str = SQLField(min_length=1, max_length=200)
+    office: str = SQLField(min_length=1, max_length=50)  # "Valencia" o "Miami"
+    created_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
+    user_uuid: str = SQLField(min_length=1, max_length=128)
+
+
+class AssetExit(SQLModel, table=True):
+    """Salida de inventario — asignación a empleado o evento de consumo (equivalente a OutboundOrder)."""
+
+    __tablename__ = "asset_exits"
+
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    asset_id: int = SQLField(foreign_key="assets.id", index=True)
+    quantity: int = SQLField(ge=1)
+    exit_type: str = SQLField(min_length=1, max_length=20)  # "allocation" o "consumption"
+    assigned_to: Optional[str] = SQLField(default=None, max_length=200)
+    office: str = SQLField(min_length=1, max_length=50)  # "Valencia" o "Miami"
+    created_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
+    user_uuid: str = SQLField(min_length=1, max_length=128)

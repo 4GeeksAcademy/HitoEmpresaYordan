@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { LoginForm as SharedLoginForm } from "@nexova/auth";
 
 /**
@@ -27,6 +29,10 @@ export function LoginForm() {
         }}
         onSuccess={() => window.location.replace("/")}
       />
+      <div className="mt-5 flex flex-col items-center gap-3 text-sm text-white/70">
+        <Link className="hover:text-cyan-300" href="/forgot-password">¿Olvidaste tu contraseña?</Link>
+        <p>¿No tenés cuenta? <Link className="text-cyan-300 hover:underline" href="/register">Crear cuenta</Link></p>
+      </div>
     </main>
   );
 }
