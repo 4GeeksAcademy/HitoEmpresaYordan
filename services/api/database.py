@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from logging import getLogger
 from os import getenv
 from pathlib import Path
 from threading import Lock
@@ -82,8 +83,7 @@ def init_db():
     try:
         SQLModel.metadata.create_all(_get_engine())
     except Exception as exc:
-        import logging
-        logging.getLogger(__name__).warning(
+        getLogger(__name__).warning(
             "No se pudieron crear las tablas en Supabase: %s", exc
         )
 
@@ -111,7 +111,7 @@ def seed_inventory():
             if existing is not None:
                 return
 
-            logger = logging.getLogger(__name__)
+            logger = getLogger(__name__)
 
             # ── Assets ────────────────────────────────────────────────
             assets_data = [
@@ -181,7 +181,6 @@ def seed_inventory():
             session.commit()
             logger.info("Sembradas %d salidas de inventario en Supabase", len(exits_data))
     except Exception as exc:
-        import logging
-        logging.getLogger(__name__).warning(
+        getLogger(__name__).warning(
             "No se pudieron sembrar datos de inventario: %s", exc
         )
