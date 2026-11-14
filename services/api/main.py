@@ -1,10 +1,13 @@
 import io
 import logging
+import os
 import re
 import sys
 import time
 from pathlib import Path
 from typing import List, Optional, Tuple
+
+import psycopg
 
 API_DIRECTORY = Path(__file__).resolve().parent
 PROJECT_ROOT = API_DIRECTORY.parents[1]
@@ -125,6 +128,20 @@ async def handle_unexpected_error(request: Request, call_next):
 @app.get("/", response_model=MessageResponse)
 def welcome() -> MessageResponse:
     return MessageResponse(message="Bienvenido a la API de Nexova")
+
+
+@app.get("/db")
+def db_status():
+    """Verifica la conexión a PostgreSQL."""
+    try:
+        conn = psycopg.connect(os.environ["DATABASE_URL"])
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.close()
+        conn.close()
+        return {"status": "ok", "database": "conectada"}
+    except Exception as e:
+        return {"status": "error", "database": "no disponible", "detail": str(e)}
 
 
 def _safe_upload_filename(filename: Optional[str]) -> str:
