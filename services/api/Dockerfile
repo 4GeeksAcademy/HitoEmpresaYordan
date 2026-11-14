@@ -2,15 +2,20 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copiar dependencias primero para aprovechar la caché de Docker
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Instalar el paquete compartido del monorepo (nexova-shared)
+COPY packages/shared /app/packages/shared
+RUN pip install --no-cache-dir /app/packages/shared
 
-# Copiar el resto del código
-COPY . .
+# Copiar e instalar dependencias de la API
+COPY services/api/requirements.txt /app/services/api/
+RUN pip install --no-cache-dir -r /app/services/api/requirements.txt
 
-# Puerto en el que escuchará Uvicorn
+# Copiar el código de la API y el módulo compartido del monorepo
+COPY services/api /app/services/api
+COPY shared /app/shared
+
+WORKDIR /app/services/api
+
 EXPOSE 8000
 
-# Comando de inicio
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

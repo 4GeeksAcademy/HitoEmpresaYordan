@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-import psycopg
+import psycopg2
 
 API_DIRECTORY = Path(__file__).resolve().parent
 PROJECT_ROOT = API_DIRECTORY.parents[1]
@@ -134,10 +134,7 @@ def welcome() -> MessageResponse:
 def db_status():
     """Verifica la conexión a PostgreSQL."""
     try:
-        conn = psycopg.connect(os.environ["DATABASE_URL"])
-        cur = conn.cursor()
-        cur.execute("SELECT 1")
-        cur.close()
+        conn = psycopg2.connect(os.environ["DATABASE_URL"])
         conn.close()
         return {"status": "ok", "database": "conectada"}
     except Exception as e:
